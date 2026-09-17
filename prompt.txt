@@ -1,0 +1,31 @@
+Using this codebase, produce revised Mermaid diagrams for a security architecture review. The goal is to make the trust boundary between the LLM and deterministic application code unmistakable.
+
+CONTEXT: This is a member-services chatbot (LangGraph-based) with member OTP verification, an Enrollment MCP, and a Benefits MCP. An existing sequence diagram combined the LLM and the agent orchestration code into one lifeline. Security needs them separated.
+
+DELIVERABLE 1 — Sequence diagram: member verification and OTP flow
+DELIVERABLE 2 — Sequence diagram: an authorized member data request (e.g. "what are my benefits?") on an existing verified session
+
+For BOTH, use these separate lifelines, and label each with the actual code artifact it represents (module path + class/function name):
+  - Member (user)
+  - UI / Socket.IO gateway
+  - Agent orchestrator / graph
+  - Tool dispatcher or tool-call interceptor
+  - Authorization validator (the component performing the verified-patient check)
+  - Azure OpenAI (LLM) — non-deterministic
+  - Enrollment MCP
+  - Benefits MCP
+  - Backend enrollment / OTP services
+  - LangGraph checkpoint store (EMCache)
+
+REQUIREMENTS:
+1. The LLM must be its own lifeline. Every arrow originating from the LLM is a PROPOSAL only. Show tool selection and arguments coming out of the LLM, then show them passing through deterministic code before any backend call.
+2. Mark each message as either LLM-GENERATED (non-deterministic) or CODE-ENFORCED (deterministic). Use dotted arrows for LLM-generated and solid for code-enforced, plus a legend note stating the convention.
+3. Show the authorization check as a message between the dispatcher and the validator lifeline — not as a self-call on the agent. Include both outcomes: allow, and deny/reject on mismatch.
+4. Annotate every call to Azure OpenAI with a note listing exactly what is included in the request payload (system prompt, conversation history, tool schemas, member identifiers, enrollment data, any PII) and what is deliberately excluded. Base this on the actual prompt/context-construction code — cite the file.
+5. Show where the verified member context is stored and read from, and state whether it is a signed/tamper-evident token or plain session state.
+6. Note any path that reaches the Benefits MCP or backend APIs WITHOUT passing through the validator, if one exists.
+
+DELIVERABLE 3 — Logical UML component diagram (Mermaid)
+Logical level of abstraction: the major deployable/logical components and their interfaces and dependencies. Not class-level detail, not a 4-box conceptual overview. Include UI, Socket.IO layer, agent runtime, LLM client, each MCP server, checkpoint/cache, and backend services, with the protocol on each connector (WebSocket, HTTP, MCP). Group components by trust zone: client, in-cluster application, internal services, external (Azure OpenAI).
+
+OUTPUT: valid Mermaid source for each diagram in separate code blocks, followed by a short table mapping every lifeline/component to its real file path and class or function name. If you cannot determine whether a step is deterministic or prompt-driven from the code, mark it UNKNOWN rather than guessing.
