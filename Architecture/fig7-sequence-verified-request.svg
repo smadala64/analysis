@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1392" height="820" viewBox="0 0 1392 820">
+<style>
+  .n{fill:#FFFFFF;stroke:#CFD7DE;stroke-width:1.5}
+  .n-sunk{fill:#E9EDF0;stroke:#CFD7DE;stroke-width:1.5}
+  .n-det{fill:#E4F2E5;stroke:#15701F;stroke-width:2.5}
+  .n-llm{fill:#F6EADF;stroke:#9A5116;stroke-width:1.5;stroke-dasharray:6 4}
+  .n-llm-s{fill:#F6EADF;stroke:#9A5116;stroke-width:2}
+  .n-allow{fill:#E4F2E5;stroke:#15701F;stroke-width:2}
+  .n-deny{fill:#F6E4E6;stroke:#8C2F39;stroke-width:2}
+  .zone{fill:none;stroke:#CFD7DE;stroke-width:1;stroke-dasharray:4 4}
+  .zone-ext{fill:none;stroke:#9A5116;stroke-width:1;stroke-dasharray:4 4}
+  .life{stroke:#CFD7DE;stroke-width:1;stroke-dasharray:3 4}
+  .bnd{stroke:#4B5763;stroke-width:1.25;stroke-dasharray:7 5}
+  .t{fill:#141A20;font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;font-weight:600;font-size:12.5px}
+  .t-lg{fill:#141A20;font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;font-weight:600;font-size:13px}
+  .ts{fill:#4B5763;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10.5px}
+  .tk{fill:#4B5763;font-family:'IBM Plex Mono',Consolas,monospace;font-size:9.5px;letter-spacing:.07em}
+  .zlab{fill:#4B5763;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;letter-spacing:.09em}
+  .tl{fill:#4B5763;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:3px;stroke-linejoin:round}
+  .tl-em{fill:#141A20;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10.5px;font-weight:500;paint-order:stroke;stroke:#FFFFFF;stroke-width:3px;stroke-linejoin:round}
+  .a{stroke:#4B5763;stroke-width:1.5;fill:none;marker-end:url(#ah)}
+  .a-llm{stroke:#9A5116;stroke-width:1.5;fill:none;stroke-dasharray:6 4;marker-end:url(#ah-llm)}
+  .a-det{stroke:#15701F;stroke-width:2.5;fill:none;marker-end:url(#ah-det)}
+  .a-allow{stroke:#15701F;stroke-width:2;fill:none;marker-end:url(#ah-allow)}
+  .a-deny{stroke:#8C2F39;stroke-width:2;fill:none;marker-end:url(#ah-deny)}
+  .a-oob{stroke:#4B5763;stroke-width:1.5;fill:none;stroke-dasharray:5 4;marker-end:url(#ah)}
+  .bg{fill:#15701F} .bg-llm{fill:#9A5116}
+  .bn{fill:#FFFFFF;font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;font-weight:700;font-size:9.5px}
+  .tw{fill:#8C2F39;font-family:'IBM Plex Mono',Consolas,monospace;font-size:9.5px;letter-spacing:.07em}
+  .tg{fill:#15701F;font-family:'IBM Plex Mono',Consolas,monospace;font-size:9.5px;letter-spacing:.07em}
+  .ref{fill:#4B5763;font-family:'IBM Plex Mono',Consolas,monospace;font-size:9px;opacity:.85}
+  .feed{stroke:#4B5763;stroke-width:1.5;fill:none}
+  .runtime{fill:#E9EDF0;stroke:#4B5763;stroke-width:1.25}
+  .n-warn{fill:#F6EADF;stroke:#9A5116;stroke-width:2.5}
+  .band{fill:#E9EDF0}
+  .band-ok{fill:#E4F2E5}
+  .band-no{fill:#F6E4E6}
+  .bandlab{fill:#4B5763;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;font-weight:500;letter-spacing:.09em}
+  .noteb{fill:#E9EDF0;stroke:#CFD7DE;stroke-width:1}
+</style>
+<defs>
+  <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4B5763"/></marker>
+  <marker id="ah-llm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9A5116"/></marker>
+  <marker id="ah-det" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#15701F"/></marker>
+  <marker id="ah-allow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#15701F"/></marker>
+  <marker id="ah-deny" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C2F39"/></marker>
+</defs>
+<rect x="0" y="0" width="1392" height="820" fill="#FFFFFF"/>
+<g transform="translate(16,16)">
+
+        <rect class="n-sunk" x="20" y="16" width="200" height="52" rx="2"/>
+        <text class="t" x="120" y="38" text-anchor="middle">Member</text>
+        <text class="ts" x="120" y="56" text-anchor="middle">web browser</text>
+
+        <rect class="n-sunk" x="244" y="16" width="200" height="52" rx="2"/>
+        <text class="t" x="344" y="38" text-anchor="middle">Orchestrator</text>
+        <text class="ts" x="344" y="56" text-anchor="middle">LangGraph runtime</text>
+
+        <rect class="n-llm" x="468" y="16" width="200" height="52" rx="2"/>
+        <text class="t" x="568" y="38" text-anchor="middle">Azure OpenAI</text>
+        <text class="ts" x="568" y="56" text-anchor="middle">managed service</text>
+
+        <rect class="n-det" x="692" y="16" width="200" height="52" rx="2"/>
+        <text class="t" x="792" y="38" text-anchor="middle">Benefit validator</text>
+        <text class="ts" x="792" y="56" text-anchor="middle">local, in-process</text>
+
+        <rect class="n-sunk" x="916" y="16" width="200" height="52" rx="2"/>
+        <text class="t" x="1016" y="38" text-anchor="middle">Session state</text>
+        <text class="ts" x="1016" y="56" text-anchor="middle">EMCache</text>
+
+        <rect class="n-sunk" x="1140" y="16" width="200" height="52" rx="2"/>
+        <text class="t" x="1240" y="38" text-anchor="middle">Benefits service</text>
+        <text class="ts" x="1240" y="56" text-anchor="middle">MCP and backend</text>
+
+        <line class="life" x1="120" y1="68" x2="120" y2="770"/>
+        <line class="life" x1="344" y1="68" x2="344" y2="770"/>
+        <line class="life" x1="568" y1="68" x2="568" y2="770"/>
+        <line class="life" x1="792" y1="68" x2="792" y2="770"/>
+        <line class="life" x1="1016" y1="68" x2="1016" y2="770"/>
+        <line class="life" x1="1240" y1="68" x2="1240" y2="770"/>
+
+        <rect class="band" x="20" y="82" width="1320" height="22"/>
+        <text class="bandlab" x="680" y="97" text-anchor="middle">A VERIFIED MEMBER IS ALREADY IN SESSION STATE</text>
+
+        <line class="a" x1="120" y1="126" x2="342" y2="126"/>
+        <text class="tl" x="232" y="120" text-anchor="middle">1 · "what are my benefits?"</text>
+
+        <line class="a" x1="344" y1="154" x2="1014" y2="154"/>
+        <text class="tl" x="680" y="148" text-anchor="middle">2 · restore the conversation for this session</text>
+
+        <line class="a" x1="1016" y1="182" x2="346" y2="182"/>
+        <text class="tl" x="680" y="176" text-anchor="middle">3 · verified member and patient set</text>
+
+        <polyline class="a" points="344,206 386,206 386,228 348,228"/>
+        <text class="tl-em" x="396" y="222">4 · route to the member flow</text>
+
+        <rect class="band" x="20" y="252" width="1320" height="22"/>
+        <text class="bandlab" x="680" y="267" text-anchor="middle">THE MODEL CHOOSES A CAPABILITY — IT DOES NOT AUTHORIZE ONE</text>
+
+        <line class="a-llm" x1="344" y1="298" x2="566" y2="298"/>
+        <text class="tl" x="455" y="292" text-anchor="middle">5 · conversation, member context, tool schemas</text>
+
+        <line class="a-llm" x1="568" y1="326" x2="346" y2="326"/>
+        <text class="tl" x="455" y="320" text-anchor="middle">6 · proposes a benefit inquiry for a patient</text>
+
+        <rect class="noteb" x="280" y="342" width="800" height="40" rx="2"/>
+        <text class="ts" x="680" y="359" text-anchor="middle">the model selects a patient from the context it was given; it asserts nothing</text>
+        <text class="tw" x="680" y="375" text-anchor="middle">NOTHING IS AUTHORIZED AT DISPATCH</text>
+
+        <line class="a" x1="344" y1="406" x2="790" y2="406"/>
+        <text class="tl" x="567" y="400" text-anchor="middle">7 · dispatch the capability</text>
+
+        <line class="a-det" x1="792" y1="434" x2="1014" y2="434"/>
+        <text class="tl-em" x="903" y="428" text-anchor="middle">8 · read the verified patient set</text>
+
+        <line class="a" x1="1016" y1="462" x2="794" y2="462"/>
+        <text class="tl" x="903" y="456" text-anchor="middle">9 · verified patient set</text>
+
+        <polyline class="a-det" points="792,486 834,486 834,508 796,508"/>
+        <text class="tl-em" x="844" y="502">10 · is the requested patient in the verified set?</text>
+
+        <rect class="band-ok" x="20" y="532" width="1320" height="22"/>
+        <text class="bandlab" x="680" y="547" text-anchor="middle">IN THE VERIFIED SET</text>
+
+        <line class="a-det" x1="792" y1="576" x2="1238" y2="576"/>
+        <text class="tl-em" x="1015" y="570" text-anchor="middle">11 · request built from session state, with the service token and context headers</text>
+
+        <line class="a" x1="1240" y1="604" x2="794" y2="604"/>
+        <text class="tl" x="1015" y="598" text-anchor="middle">12 · member benefit data</text>
+
+        <line class="a" x1="792" y1="632" x2="346" y2="632"/>
+        <text class="tl" x="567" y="626" text-anchor="middle">13 · tool result</text>
+
+        <line class="a" x1="344" y1="660" x2="122" y2="660"/>
+        <text class="tl" x="233" y="654" text-anchor="middle">14 · answer, worded by the model</text>
+
+        <rect class="band-no" x="20" y="684" width="1320" height="22"/>
+        <text class="bandlab" x="680" y="699" text-anchor="middle">NOT IN THE VERIFIED SET</text>
+
+        <line class="a-deny" x1="792" y1="728" x2="346" y2="728"/>
+        <text class="tl-em" x="567" y="722" text-anchor="middle">15 · refused — no service call is made</text>
+
+        <line class="a-deny" x1="344" y1="756" x2="122" y2="756"/>
+        <text class="tl" x="233" y="750" text-anchor="middle">16 · the request is declined</text>
+      </g>
+</svg>

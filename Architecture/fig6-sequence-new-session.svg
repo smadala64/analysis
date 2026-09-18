@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1392" height="696" viewBox="0 0 1392 696">
+<style>
+  .n{fill:#FFFFFF;stroke:#CFD7DE;stroke-width:1.5}
+  .n-sunk{fill:#E9EDF0;stroke:#CFD7DE;stroke-width:1.5}
+  .n-det{fill:#E4F2E5;stroke:#15701F;stroke-width:2.5}
+  .n-llm{fill:#F6EADF;stroke:#9A5116;stroke-width:1.5;stroke-dasharray:6 4}
+  .n-llm-s{fill:#F6EADF;stroke:#9A5116;stroke-width:2}
+  .n-allow{fill:#E4F2E5;stroke:#15701F;stroke-width:2}
+  .n-deny{fill:#F6E4E6;stroke:#8C2F39;stroke-width:2}
+  .zone{fill:none;stroke:#CFD7DE;stroke-width:1;stroke-dasharray:4 4}
+  .zone-ext{fill:none;stroke:#9A5116;stroke-width:1;stroke-dasharray:4 4}
+  .life{stroke:#CFD7DE;stroke-width:1;stroke-dasharray:3 4}
+  .bnd{stroke:#4B5763;stroke-width:1.25;stroke-dasharray:7 5}
+  .t{fill:#141A20;font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;font-weight:600;font-size:12.5px}
+  .t-lg{fill:#141A20;font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;font-weight:600;font-size:13px}
+  .ts{fill:#4B5763;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10.5px}
+  .tk{fill:#4B5763;font-family:'IBM Plex Mono',Consolas,monospace;font-size:9.5px;letter-spacing:.07em}
+  .zlab{fill:#4B5763;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;letter-spacing:.09em}
+  .tl{fill:#4B5763;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:3px;stroke-linejoin:round}
+  .tl-em{fill:#141A20;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10.5px;font-weight:500;paint-order:stroke;stroke:#FFFFFF;stroke-width:3px;stroke-linejoin:round}
+  .a{stroke:#4B5763;stroke-width:1.5;fill:none;marker-end:url(#ah)}
+  .a-llm{stroke:#9A5116;stroke-width:1.5;fill:none;stroke-dasharray:6 4;marker-end:url(#ah-llm)}
+  .a-det{stroke:#15701F;stroke-width:2.5;fill:none;marker-end:url(#ah-det)}
+  .a-allow{stroke:#15701F;stroke-width:2;fill:none;marker-end:url(#ah-allow)}
+  .a-deny{stroke:#8C2F39;stroke-width:2;fill:none;marker-end:url(#ah-deny)}
+  .a-oob{stroke:#4B5763;stroke-width:1.5;fill:none;stroke-dasharray:5 4;marker-end:url(#ah)}
+  .bg{fill:#15701F} .bg-llm{fill:#9A5116}
+  .bn{fill:#FFFFFF;font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;font-weight:700;font-size:9.5px}
+  .tw{fill:#8C2F39;font-family:'IBM Plex Mono',Consolas,monospace;font-size:9.5px;letter-spacing:.07em}
+  .tg{fill:#15701F;font-family:'IBM Plex Mono',Consolas,monospace;font-size:9.5px;letter-spacing:.07em}
+  .ref{fill:#4B5763;font-family:'IBM Plex Mono',Consolas,monospace;font-size:9px;opacity:.85}
+  .feed{stroke:#4B5763;stroke-width:1.5;fill:none}
+  .runtime{fill:#E9EDF0;stroke:#4B5763;stroke-width:1.25}
+  .n-warn{fill:#F6EADF;stroke:#9A5116;stroke-width:2.5}
+  .band{fill:#E9EDF0}
+  .band-ok{fill:#E4F2E5}
+  .band-no{fill:#F6E4E6}
+  .bandlab{fill:#4B5763;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;font-weight:500;letter-spacing:.09em}
+  .noteb{fill:#E9EDF0;stroke:#CFD7DE;stroke-width:1}
+</style>
+<defs>
+  <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4B5763"/></marker>
+  <marker id="ah-llm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9A5116"/></marker>
+  <marker id="ah-det" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#15701F"/></marker>
+  <marker id="ah-allow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#15701F"/></marker>
+  <marker id="ah-deny" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8C2F39"/></marker>
+</defs>
+<rect x="0" y="0" width="1392" height="696" fill="#FFFFFF"/>
+<g transform="translate(16,16)">
+
+        <rect class="n-sunk" x="20" y="16" width="200" height="52" rx="2"/>
+        <text class="t" x="120" y="38" text-anchor="middle">Member</text>
+        <text class="ts" x="120" y="56" text-anchor="middle">web browser</text>
+
+        <rect class="n-sunk" x="244" y="16" width="200" height="52" rx="2"/>
+        <text class="t" x="344" y="38" text-anchor="middle">Orchestrator</text>
+        <text class="ts" x="344" y="56" text-anchor="middle">LangGraph runtime</text>
+
+        <rect class="n-llm" x="468" y="16" width="200" height="52" rx="2"/>
+        <text class="t" x="568" y="38" text-anchor="middle">Azure OpenAI</text>
+        <text class="ts" x="568" y="56" text-anchor="middle">managed service</text>
+
+        <rect class="n-sunk" x="692" y="16" width="200" height="52" rx="2"/>
+        <text class="t" x="792" y="38" text-anchor="middle">Validation tools</text>
+        <text class="ts" x="792" y="56" text-anchor="middle">local, in-process</text>
+
+        <rect class="n-sunk" x="916" y="16" width="200" height="52" rx="2"/>
+        <text class="t" x="1016" y="38" text-anchor="middle">Session state</text>
+        <text class="ts" x="1016" y="56" text-anchor="middle">EMCache</text>
+
+        <rect class="n-sunk" x="1140" y="16" width="200" height="52" rx="2"/>
+        <text class="t" x="1240" y="38" text-anchor="middle">Enrollment service</text>
+        <text class="ts" x="1240" y="56" text-anchor="middle">MCP and backend</text>
+
+        <line class="life" x1="120" y1="68" x2="120" y2="646"/>
+        <line class="life" x1="344" y1="68" x2="344" y2="646"/>
+        <line class="life" x1="568" y1="68" x2="568" y2="646"/>
+        <line class="life" x1="792" y1="68" x2="792" y2="646"/>
+        <line class="life" x1="1016" y1="68" x2="1016" y2="646"/>
+        <line class="life" x1="1240" y1="68" x2="1240" y2="646"/>
+
+        <rect class="band" x="20" y="82" width="1320" height="22"/>
+        <text class="bandlab" x="680" y="97" text-anchor="middle">EVERY REQUEST BEGINS BY RESTORING SESSION STATE</text>
+
+        <line class="a" x1="120" y1="126" x2="342" y2="126"/>
+        <text class="tl" x="232" y="120" text-anchor="middle">1 · request with a session identifier</text>
+
+        <line class="a" x1="344" y1="154" x2="1014" y2="154"/>
+        <text class="tl" x="680" y="148" text-anchor="middle">2 · restore the conversation for this session</text>
+
+        <line class="a" x1="1016" y1="182" x2="346" y2="182"/>
+        <text class="tl" x="680" y="176" text-anchor="middle">3 · no verified member is present</text>
+
+        <polyline class="a" points="344,206 386,206 386,228 348,228"/>
+        <text class="tl-em" x="396" y="222">4 · route to the customer validation flow</text>
+
+        <rect class="band" x="20" y="252" width="1320" height="22"/>
+        <text class="bandlab" x="680" y="267" text-anchor="middle">CUSTOMER VALIDATION — CONTACT LOOKUP, PASSCODE SEND, PASSCODE CHECK</text>
+
+        <line class="a-llm" x1="344" y1="298" x2="566" y2="298"/>
+        <text class="tl" x="455" y="292" text-anchor="middle">5 · the validation tool set only</text>
+
+        <line class="a-llm" x1="568" y1="326" x2="346" y2="326"/>
+        <text class="tl" x="455" y="320" text-anchor="middle">6 · proposes a contact lookup</text>
+
+        <line class="a" x1="344" y1="354" x2="790" y2="354"/>
+        <text class="tl" x="567" y="348" text-anchor="middle">7 · dispatch get_contact_info</text>
+
+        <line class="a" x1="792" y1="382" x2="1238" y2="382"/>
+        <text class="tl" x="1015" y="376" text-anchor="middle">8 · member and contact lookup</text>
+
+        <line class="a" x1="1240" y1="410" x2="794" y2="410"/>
+        <text class="tl" x="1015" y="404" text-anchor="middle">9 · masked contact options, or no data</text>
+
+        <rect class="noteb" x="280" y="426" width="800" height="40" rx="2"/>
+        <text class="ts" x="680" y="443" text-anchor="middle">the member is asked to choose a contact, then to enter the passcode</text>
+        <text class="ts" x="680" y="459" text-anchor="middle">each turn returns through the chat route and is dispatched the same way</text>
+
+        <line class="a" x1="792" y1="490" x2="1238" y2="490"/>
+        <text class="tl" x="1015" y="484" text-anchor="middle">10 · send_otp, then validate_otp</text>
+
+        <line class="a" x1="1240" y1="518" x2="794" y2="518"/>
+        <text class="tl" x="1015" y="512" text-anchor="middle">11 · VERIFICATION_SUCCESS, or a verification failure</text>
+
+        <line class="a-det" x1="792" y1="546" x2="1014" y2="546"/>
+        <text class="tl-em" x="903" y="540" text-anchor="middle">12 · write verified state</text>
+
+        <rect class="noteb" x="280" y="562" width="800" height="40" rx="2"/>
+        <text class="tg" x="680" y="579" text-anchor="middle">WRITTEN ONLY ON VERIFICATION_SUCCESS</text>
+        <text class="ts" x="680" y="595" text-anchor="middle">a failed attempt leaves the session unverified and nothing is served</text>
+
+        <line class="a" x1="344" y1="626" x2="122" y2="626"/>
+        <text class="tl" x="233" y="620" text-anchor="middle">13 · verified — the original request is now served</text>
+      </g>
+</svg>
