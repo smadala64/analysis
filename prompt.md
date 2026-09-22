@@ -19,13 +19,26 @@ List every distinct feature or capability the system needs, based only on what w
 
 
 
-Here is the agreed feature list for the call analytics project.
+Here is the capability list distilled from our call analysis requirements meeting:
 
-For each feature, identify the technical components required to deliver it (data model/tables, ingestion, AI/LLM services, batch jobs, APIs, UI, etc.).
+[paste the list]
+
+First, sort each item into one of three buckets:
+A. User-facing feature (delivers something a user sees or uses)
+B. Cross-cutting platform requirement (shapes the data model or pipeline rather than standing alone)
+C. Scope extension beyond call transcripts (requires a new data source)
+
+Then, for the bucket A features, identify the technical components needed to deliver each: data model/tables, ingestion, AI/LLM services, batch or streaming jobs, APIs, UI, export interfaces.
 
 Then produce:
-1. A table: Feature | Components required | Depends on (other features or components).
-2. A list of shared components used by multiple features, noting which features need them.
-3. A suggested build order based only on technical dependencies, with a one-line reason for each position.
+1. A table: Capability | Bucket | Components required | Depends on.
+2. A list of shared components used by multiple capabilities, noting which ones need them.
+3. For each bucket B item, state how it constrains the design of the shared components.
+4. For each bucket C item, state what additional data sources and components it requires, and whether it can reuse the call pipeline.
+5. A suggested build order based only on technical dependencies, with a one-line reason for each position.
 
-Flag any feature where the required components are unclear from the information given.
+Call out separately:
+- Any attribute needed for filtering or breakdowns (queue, caller type, group/subgroup, payer, state, provider, subscriber) whose source or derivation is not obvious, since resolving these may be significant work on its own.
+- Any capability where the required components can't be determined from the information given.
+
+Do not invent capabilities that aren't in the list.
