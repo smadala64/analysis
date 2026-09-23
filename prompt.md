@@ -42,3 +42,39 @@ Call out separately:
 - Any capability where the required components can't be determined from the information given.
 
 Do not invent capabilities that aren't in the list.
+
+
+
+
+
+
+Pass3:
+
+
+Attached/below is the capability list and component table for our Interaction Analytics project, plus review feedback from our architect.
+
+## Feedback to apply
+1. Replace "Call" with "Interaction" throughout. An Interaction is the core domain object; Calls (inbound member, inbound provider, outbound), Chatbot sessions, Emails, and Mail are types of Interaction. Reflect this in every capability and component.
+2. Add these capabilities:
+   - Manage/curate categories and subcategories (edit discovered ones, define new or separate ones)
+   - Continually categorize interactions as they arrive
+   - Associate categorization with interaction metadata (source, queue, etc.)
+   - Support creation of static, well-structured reports (e.g. monthly CareSource PCIR and PCDR)
+   - Associate categorization definitions by group/subgroup, payer, plan
+   - Support standard front-end analytics tools such as Power BI and Tableau
+   - Support reprocessing of interactions given criteria including start/end date and categorization-definition filters
+3. These two capabilities were flagged as underdefined. For each, propose 2-3 concrete interpretations of what it could mean, with what each would require to build, so we can pick one:
+   - "Measures the effectiveness of call-flow and routing changes"
+   - "Allows extracted attributes and analysis logic to evolve, including reprocessing"
+
+## Deliverables
+A. **Updated capability list and component/dependency table**, with the feedback applied. Mark each row as unchanged, revised, or new.
+B. **A UML domain model** for the problem domain, to define our terms and validate the DB structure later. Include:
+   - Core entities and their attributes (Interaction and its subtypes, Category, Subcategory, CategoryDefinition/Taxonomy, ExtractedAttribute, Queue, Caller, Group/Subgroup, Payer, Plan, Provider, Subscriber, Report)
+   - Relationships with multiplicities
+   - Where a category taxonomy is scoped to a group, payer, or plan
+   - How multiple category assignments from different sources can attach to one interaction
+   - Output as PlantUML or Mermaid class-diagram syntax, plus a short glossary defining each entity in one sentence
+C. **Open questions**, specifically anything in the domain model you had to assume, and any place where the relationship between an Interaction and its group/plan/payer is unclear.
+
+Rules: do not invent capabilities beyond the list and the feedback. Label assumptions clearly.
