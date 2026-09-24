@@ -1,0 +1,174 @@
+@startuml Interaction Analytics Domain Model
+hide circle
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "Interaction" {
+  abstract class Interaction {
+    interactionId
+    channel
+    direction
+    startedAt
+    endedAt
+    sourceSystem
+  }
+  class Call {
+    originalQueue
+    finalQueue
+    transferCount
+  }
+  class ChatbotSession {
+    botVersion
+    fulfillmentOutcome
+  }
+  class EmailInteraction
+  class MailItem
+
+  class InteractionContent {
+    contentId
+    contentType
+    text
+    retainedUntil
+  }
+  class RoutingEvent {
+    eventId
+    fromQueue
+    toQueue
+    occurredAt
+  }
+  class Party {
+    partyId
+    partyType
+  }
+}
+
+Interaction <|-- Call
+Interaction <|-- ChatbotSession
+Interaction <|-- EmailInteraction
+Interaction <|-- MailItem
+
+Interaction "1" *-- "1..*" InteractionContent
+Interaction "1" o-- "0..*" RoutingEvent
+Interaction "1" --> "1" Party : initiated by
+
+package "Analysis" {
+  class AnalysisRun {
+    runId
+    taxonomyVersion
+    configVersion
+    criteria
+    executedAt
+  }
+  class CategoryAssignment {
+    assignmentId
+    assignedBy
+    confidence
+    isCurrent
+  }
+  class ExtractedAttribute {
+    value
+    isCurrent
+  }
+}
+
+AnalysisRun "1" --> "0..*" CategoryAssignment : produces
+AnalysisRun "1" --> "0..*" ExtractedAttribute : produces
+Interaction "1" --> "0..*" CategoryAssignment
+Interaction "1" --> "0..*" ExtractedAttribute
+
+package "Taxonomy" {
+  class Taxonomy {
+    taxonomyId
+    name
+    owner
+    version
+    effectiveFrom
+  }
+  class TaxonomyScope {
+    scopeType
+    scopeKey
+    precedence
+  }
+  class Category {
+    categoryId
+    name
+    level
+  }
+  class AttributeDefinition {
+    attributeKey
+    label
+    dataType
+  }
+  class CandidateCategory {
+    label
+    clusterSize
+    status
+  }
+}
+
+Taxonomy "1" *-- "0..*" TaxonomyScope
+Taxonomy "1" *-- "1..*" Category
+Category "0..1" --> "0..*" Category : parent of
+Category "1" --> "0..*" AttributeDefinition : defines what to extract
+CategoryAssignment "*" --> "1" Category
+ExtractedAttribute "*" --> "1" AttributeDefinition
+CandidateCategory "0..*" ..> "0..1" Category : promoted to
+
+package "Business context" {
+  class Case {
+    caseId
+  }
+  class Enrollment {
+    enrollmentId
+    effectiveFrom
+    effectiveTo
+  }
+  class Plan {
+    planId
+  }
+  class Payer {
+    payerId
+  }
+  class Group {
+    groupId
+    subgroupId
+  }
+}
+
+Interaction ..> Case : hop 1
+Case ..> Party : hop 2 (member)
+Party ..> Enrollment : hop 3
+Enrollment ..> Plan : hop 4
+Plan ..> Payer : hop 5
+Enrollment ..> Group : hop 6 (source unconfirmed)
+
+TaxonomyScope ..> Group : scoped by
+TaxonomyScope ..> Plan : scoped by
+TaxonomyScope ..> Payer : scoped by
+
+package "Reporting" {
+  class ReportDefinition {
+    reportId
+    name
+    schedule
+  }
+  class ReportRun {
+    runId
+    periodStart
+    periodEnd
+  }
+}
+
+ReportDefinition "1" --> "0..*" ReportRun
+ReportDefinition ..> Taxonomy : reports against
+ReportRun ..> CategoryAssignment : aggregates
+
+note bottom of Group
+  No single field on an Interaction identifies
+  group, plan or payer. Hops 1-6 are the
+  assumed resolution path and the main
+  open design problem. Group may not hang
+  off Enrollment at all.
+end note
+
+@enduml
