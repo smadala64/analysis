@@ -1,7 +1,0 @@
-Examples raised in the requirements call
-
-Category → Subcategory	What F5 extracts	What it could tell you	Possible action
-Find a dentist → New dentist	Looking for a specific dentist they know, or any dentist near home? Did they want the list emailed, or was it read to them?	TenCare: about 50% of calls were about finding a dentist. Almost all were "new dentist near home," and many only wanted the list emailed.	Better self-service: online search, or a text/email of the list without talking to an agent
-Benefits → Coverage question	Specific procedure, or maximum/deductible? If a procedure, which one (procedure code)?	"In group ABC, crowns are the most-asked procedure"	Targeted member communication, or a clearer benefit summary for that group
-Benefits → Frequency limits	Which frequency rule confused them (e.g. "2 in 12 months")	Share of benefit calls driven by the same frequency question	Add an IVR message explaining the rule (the example from the start of the call)
-Toolkit support → Login	Password not working, reset process failing, MFA code slow, or MFA code never arrived	How many toolkit calls came from the MFA rollout, and which failure was most common	Fix the specific MFA or reset step, with numbers to back the request
