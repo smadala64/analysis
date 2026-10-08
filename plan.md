@@ -1,68 +1,84 @@
 ROLE
-You are helping me run a one-off test: find out why people called Delta Dental over the last 1–2 weeks, using a sample of call transcripts. This is a quick analysis, not a product. Keep everything simple: Python scripts plus CSV/Excel outputs. Do not create database tables or change anything in the database.
+You are helping me analyze two weeks of Delta Dental call transcripts for the chatbot team, which is about to build a claims agent. They need to know which claims questions callers ask, how often, and what it takes to answer each one. This is a one-off analysis: Python scripts plus Excel/Markdown outputs. Do not create database objects or change anything in the database.
+
+PARAMETERS (ask me to confirm before Step 1)
+- START_DATE = 2026-09-21, END_DATE = 2026-10-04 (inclusive, two full weeks, US/Eastern)
+- CLASSIFY_SAMPLE_SIZE = 600 claims calls (for the percentages)
+- DISCOVERY_SAMPLE_SIZE = 350 claims calls (for building the categories)
 
 DATA SOURCE (Oracle, read-only)
-- Table: R_CST.TRANSCRIPT
-- Columns: TRANSCRIPT_ID (NUMBER), TRANSCRIPTION (CLOB, JSON), TRANSCRIPTION_RAW_DATA (CLOB, JSON), LAST_MODIFIED_TIMESTAMP (TIMESTAMP WITH TIME ZONE), USER_NAME, APPL
-- Use TRANSCRIPTION_RAW_DATA. It is JSON with a "combinedPhrases" array; each item has a "text" field holding the conversation. It may also contain a per-speaker "phrases" array (with channel/speaker info). Inspect the structure on ONE record by printing only the JSON keys, never the text values, and use speaker info if it exists.
-- LAST_MODIFIED_TIMESTAMP is when the row was last updated, not the call date. The call date is also in the file name inside TRANSCRIPTION metadata (for example "IRCall_300114499050241008.wav", where the last 6 digits are YYMMDD). Extract it as call_date when possible.
-- Connection details come from environment variables: ORACLE_USER, ORACLE_PASSWORD, ORACLE_DSN. Never hard-code credentials. Use the python-oracledb package (thin mode).
+- Table R_CST.TRANSCRIPT: TRANSCRIPT_ID, TRANSCRIPTION (CLOB JSON with metadata incl. duration and fileName), TRANSCRIPTION_RAW_DATA (CLOB JSON with a "combinedPhrases" array whose items have "text"; it may also have a per-speaker "phrases" array), LAST_MODIFIED_TIMESTAMP.
+- Call date: parse it from the fileName (e.g. "IRCall_300114499050241008.wav", where the last 6 digits are YYMMDD = 2024-10-08). LAST_MODIFIED_TIMESTAMP can be days later than the call, so query with LAST_MODIFIED_TIMESTAMP >= START_DATE and <= END_DATE + 14 days, then keep only rows whose fileName date is within START_DATE..END_DATE. If a fileName can't be parsed, fall back to LAST_MODIFIED_TIMESTAMP and count how often that happens.
+- If a transcript appears more than once for the same fileName, keep the latest row.
+- Connection from environment variables ORACLE_USER, ORACLE_PASSWORD, ORACLE_DSN. Use python-oracledb (thin mode). Never hard-code credentials.
 
-HARD RULES ON PRIVACY (these override everything else)
-1. The raw transcripts contain PHI/PII. You must NEVER open, print, summarize or read the contents of raw transcript files or query results into this conversation. Work with them only through the scripts you write.
-2. When you inspect or debug, print only counts, lengths, JSON keys and placeholder statistics, never transcript text.
-3. You may read transcript text ONLY from the de-identified file, and ONLY after I confirm in this chat that I have spot-checked it.
-4. Do not store any mapping from placeholders back to original values.
-5. Do not use the database TRANSCRIPT_ID in any output file. Use a new sequential call_no (1, 2, 3...). Keep a separate private file mapping call_no -> TRANSCRIPT_ID and call_date in the raw folder only.
-6. Folder layout: ./raw/ (PHI, never shared, add to .gitignore), ./clean/ (de-identified), ./output/ (results). Create a .gitignore that excludes ./raw/.
+PRIVACY RULES (override everything else)
+1. Raw transcripts contain PHI/PII. Never open, print, summarize or read raw transcript text into this conversation. Handle it only inside scripts.
+2. When debugging raw data, print only counts, lengths, JSON keys and statistics.
+3. Read transcript text only from ./clean/, and only after I confirm the de-identification spot-check.
+4. No mapping from placeholders back to original values.
+5. Outputs use a new sequential call_no, never TRANSCRIPT_ID. The call_no -> TRANSCRIPT_ID/fileName/date map lives only in ./raw/.
+6. Folders: ./raw/ (PHI, in .gitignore, never shared), ./clean/, ./output/, ./scripts/. Create the .gitignore first.
 
-STEP 1 – Size and sample
-Write scripts/01_extract.py that:
-- Counts rows in the window (parameter DAYS, default 14).
-- Pulls a random sample (parameter SAMPLE_SIZE, default 500) using ORDER BY DBMS_RANDOM.VALUE FETCH FIRST :n ROWS ONLY, filtered on LAST_MODIFIED_TIMESTAMP >= SYSTIMESTAMP - NUMTODSINTERVAL(:days,'DAY').
-- Reads the CLOBs, parses the JSON, and builds one text string per call (speaker-labelled lines like "Agent: ..." / "Caller: ..." if speaker info exists, otherwise the joined combinedPhrases text).
-- Writes ./raw/transcripts_raw.jsonl as {"call_no", "text"} and ./raw/id_map.csv as call_no, transcript_id, call_date, duration_seconds.
-- Prints only: total rows in the window, rows sampled, average text length, and the number of rows that failed to parse.
+STEP 1 – Extract all calls in the window (scripts/01_extract.py)
+- Pull every transcript in the window per the date rules above.
+- Build one text per call. If speaker information exists, label the lines "Agent:" / "Caller:" (work out which channel is the agent from the greeting "Welcome to Delta Dental" / "Thank you for calling" being spoken first; report how confident that is). Otherwise join the combinedPhrases text.
+- Write ./raw/transcripts_raw.jsonl {call_no, text} and ./raw/id_map.csv {call_no, transcript_id, file_name, call_date, duration_seconds}.
+- Print: rows queried, rows kept in the window, duplicates removed, parse failures, calls per day, average length.
 
-STEP 2 – De-identify
-Write scripts/02_deidentify.py using presidio-analyzer and presidio-anonymizer (spaCy en_core_web_lg) that:
-- Detects and replaces: PERSON -> [NAME], PHONE_NUMBER -> [PHONE], EMAIL_ADDRESS -> [EMAIL], US_SSN -> [SSN], DATE_TIME -> [DATE], LOCATION/addresses -> [ADDRESS], CREDIT_CARD -> [CARD].
-- Adds custom regex recognizers for:
-  - member/subscriber IDs and other long ID numbers: any run of 6+ digits, including digits separated by spaces or dashes -> [ID_NUMBER]
-  - spoken digit sequences, e.g. "five five two one eight nine" or "five five two, one eight nine" (4+ number words in a row, including "oh"/"zero") -> [ID_NUMBER]
-  - dates of birth in spoken or numeric form ("March fifth nineteen eighty", "3/5/1980") -> [DOB]
-  - zip codes -> [ZIP] (keep them out; we only need to know a zip was given)
-  - group numbers, claim numbers, NPI (10 digits) -> [ID_NUMBER]
-- Keeps dental and benefit vocabulary intact (procedure names, "crown", "deductible", "maximum", plan names such as PPO/Premier) and "Delta Dental".
-- Writes ./clean/transcripts_clean.jsonl as {"call_no", "text"}.
-- Writes ./output/deid_stats.csv with counts of each placeholder type per call, and prints totals only.
-- Writes ./raw/spotcheck_sample.txt containing 40 random calls showing original and cleaned text side by side, for ME to review. You must not open this file.
-Then STOP and tell me: "De-identification done. Please review ./raw/spotcheck_sample.txt and confirm before I read any transcripts." Wait for my confirmation. If I report misses, update the recognizers and rerun.
+STEP 2 – De-identify all calls (scripts/02_deidentify.py)
+- Presidio analyzer + anonymizer (spaCy en_core_web_lg). Use multiprocessing; it must handle ~15,000 calls.
+- Replace: PERSON -> [NAME], PHONE_NUMBER -> [PHONE], EMAIL_ADDRESS -> [EMAIL], US_SSN -> [SSN], addresses/LOCATION -> [ADDRESS], CREDIT_CARD and bank numbers -> [CARD].
+- Custom recognizers: runs of 6+ digits incl. spaced or dashed -> [ID_NUMBER]; spoken digit sequences of 4+ number words incl. "oh"/"zero" -> [ID_NUMBER]; dates of birth spoken or numeric -> [DOB]; zip codes -> [ZIP]; NPI, group, claim and member numbers -> [ID_NUMBER]. Dollar amounts are NOT PHI; keep them, since they matter for claims questions.
+- Keep dental, benefit and claims vocabulary intact (procedure names, CDT codes like D2740, "deductible", "EOB", "denied", plan names, "Delta Dental").
+- Write ./clean/transcripts_clean.jsonl {call_no, text} and ./output/deid_stats.csv (placeholder counts per call). Print totals only.
+- Write ./raw/spotcheck_sample.txt with 40 random calls showing original and cleaned text side by side, for ME only. Do not open it.
+- STOP and tell me: "De-identification done. Please review ./raw/spotcheck_sample.txt and confirm." Wait. If I report misses, fix the recognizers and rerun.
 
-STEP 3 – Discover why people called (only after I confirm the spot-check)
-Work only from ./clean/transcripts_clean.jsonl. I am NOT giving you a category list. Your job is to discover it.
-- Decide your own approach. You may write and run Python to chunk, sample, embed, cluster or count; explain briefly what you chose and why.
-- For each call, capture each distinct reason for calling in 5–8 words, plus caller type (member / provider / other / unknown). Save to ./output/topics.csv (no transcript quotes).
-- From the topics, build the categories and subcategories bottom-up: group similar reasons, name each group, write a one-line definition and count calls in each.
-- Then go one level deeper on the 3 largest categories: what specific kinds of questions sit inside them (e.g. within claims: denial reason, payment status, EOB confusion) and what details would make them actionable (procedure, plan feature, delivery method, etc.).
-- Report anything unexpected, and anything that doesn't fit, rather than forcing it into a category.
-- All counts must come from code over the full file, not from your reading of a subset. Say which numbers are exact counts and which are estimates from a sample.
+STEP 3 – Identify claims calls (scripts/03_claims_filter.py), after my confirmation
+- Definition of a claims call (agreed): the caller asks about anything to do with claims, including claim status, payment, denial, what they owe, EOBs, reimbursement, submitting or resubmitting, appeals and disputes, coordination of benefits on a claim, AND pre-treatment questions about coverage or estimated cost for a procedure (predeterminations/estimates). Applies to member and provider callers.
+- First pass: keyword/phrase rules on ./clean text, tuned for recall (claim, EOB, explanation of benefits, denied, denial, paid, payment, reimburse, balance, owe, bill, statement, appeal, resubmit, processed, predetermination, pre-treatment estimate, estimate, "is it covered", "how much will I pay", "out of pocket", coordination of benefits, etc.).
+- Then validate it yourself by reading clean text: 60 random flagged calls (is each really claims-related?) and 60 random unflagged calls (did we miss any?). Adjust the rules and repeat until precision and recall both look above ~90%. Report the estimates.
+- Write ./output/claims_calls.csv {call_no, call_date, flagged_by} and print: total calls, claims calls, claims % of all calls.
 
-STEP 4 – Write it up
-./output/category_list.md (discovered categories, subcategories and definitions), ./output/call_reasons_summary.xlsx (counts and % by category/subcategory and caller type), and ./output/call_reasons_summary.md (one page: top reasons, deep-dive findings for the top 3 categories, surprises, and 1–2 de-identified example snippets per top subcategory).
+STEP 4 – Discover the claims question types (you decide the method)
+- Take a random DISCOVERY_SAMPLE_SIZE of claims calls. I am NOT giving you categories. Build them bottom-up.
+- You may write and run Python to chunk, sample, embed, cluster or count. Briefly explain your approach.
+- For each call, list each distinct claims question (a call can have several), with: caller_type (member / provider / other / unknown), the question in 5–8 plain words, and notes.
+- From these, build a two-level taxonomy (category -> question type), e.g. Claim status / Denial reason / Patient balance / EOB explanation / Payment & reimbursement / Submission & resubmission / Appeal / Pre-treatment coverage & estimate / COB, but derive the real list from the data. For the largest 3 categories, go one level deeper (e.g. denial: frequency limit, waiting period, missing information, not a covered benefit). Categories must not overlap; anything that doesn't fit goes into "Other – explain".
+- For each question type, write down:
+  - definition
+  - 3–5 typical caller phrasings (paraphrased, de-identified)
+  - what the caller provides (member ID, claim number, date of service, provider name...)
+  - what the agent needed to look up (claim status, paid amount, denial/remark code, EOB, eligibility, accumulators...)
+  - how it was usually resolved (answered / sent EOB or form / transferred / reprocessing or ticket / told to contact provider or other party)
+  - bot suitability: Self-service (answerable from a data lookup) / Assisted (needs explanation or judgment, bot can draft) / Human (dispute, appeal, exception)
+- Save as ./output/claims_taxonomy.md and STOP for my review before Step 5.
 
-STEP 5 – Summarize
-Write scripts/05_summary.py that produces ./output/call_reasons_summary.xlsx with sheets:
-- Summary: calls by primary category with count and % of calls, split by caller type
-- Subcategories: topics by category and final_subcategory with count and %
-- Topics: the full topics_final.csv
-- Notes: sample size, date window, number of calls with multiple topics, % resolved on call, and the method (random sample, de-identified, AI-classified, not a census)
-Then write ./output/call_reasons_summary.md: a one-page plain-English summary with the top 10 reasons, member vs provider differences, anything surprising, and, for each of the top 5 subcategories, 1–2 short de-identified example snippets taken from ./clean only.
+STEP 5 – Classify a sample for percentages (after I approve the taxonomy)
+- Draw a NEW random sample of CLASSIFY_SAMPLE_SIZE claims calls (exclude the discovery sample if possible).
+- For every call, read the clean text and record each claims question with: call_no, caller_type, category, question_type, sub_type (if applicable), is_primary (main reason of the call), resolved_on_call (yes/no/unclear), resolution_type, bot_suitability. No transcript quotes in this file. Save to ./output/claims_questions.csv.
+- Also record per call: number of claims questions and whether the call had non-claims topics too.
+- Use only what's in the transcript. If unsure, mark Other or unclear; never guess.
+- Report progress every 50 calls.
 
-DELIVERABLES
-./output/call_reasons_summary.xlsx, ./output/call_reasons_summary.md, ./output/category_list.md, ./output/topics_final.csv, ./output/deid_stats.csv, plus the scripts in ./scripts/ with a short README explaining how to rerun them.
+STEP 6 – Compute and package (scripts/06_report.py; all numbers from code)
+Produce ./output/claims_analysis.xlsx with sheets:
+- Overview: window, total calls, claims calls and % of all calls, member vs provider split, sample sizes, 95% margin of error for sample-based percentages, keyword-filter precision/recall estimates.
+- By category: count and % per call (primary reason) AND per question, split member / provider, with margin of error.
+- By question type: same, at the question-type and sub-type level.
+- Question catalog: one row per question type, with definition, % of claims calls, % of claims questions, member/provider split, typical phrasings, caller provides, agent looks up, usual resolution, % resolved on call, bot suitability.
+- Sample phrasings: 5–10 de-identified example phrasings per question type (for chatbot intent design and test cases).
+- Data: claims_questions.csv.
+And ./output/claims_summary.md, a 1–2 page plain-English summary for the chatbot team covering:
+  - how big claims is
+  - the top 10 claims question types with % (member vs provider)
+  - for each of the top 5: what callers ask, what's needed to answer, and how suitable it is for the bot
+  - a suggested priority order for the claims agent (high volume + self-service first)
+  - surprises
+  - method and caveats (sample-based, de-identified, AI-classified, keyword filter accuracy)
 
 WORKING STYLE
-- Before writing code, show me the plan for each step in 3–5 lines, then build it.
-- Prefer small, readable scripts over a framework.
-- If anything is unclear about the data (for example the JSON structure differs from what I described), stop and ask rather than guess.
+- Before each step, tell me your plan in 3–5 lines, then build it.
+- Small readable scripts; a README in ./scripts explaining how to rerun.
+- If the data looks different from what I described, stop and ask.
