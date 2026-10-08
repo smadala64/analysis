@@ -115,3 +115,27 @@ WORKING STYLE
 - Before each step, tell me your plan in 3–5 lines, then build it.
 - Small readable scripts; a README in ./scripts explaining how to rerun.
 - If the data looks different from what I described, stop and ask.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Calibration looks good overall. Before approving, apply these changes to the frozen taxonomy and output format, then re-run the 20 calibration calls:
+
+Add field scope = claims / benefits_coverage. Use benefits_coverage for questions about plan benefits, maximums, deductibles, frequencies or whether a service is covered, when no specific submitted claim is involved. Keep all other fields the same.
+Caller type rule: anyone calling on behalf of a member (spouse, parent, guardian) = member. Use other only for brokers, employers or unidentified third parties.
+Extend procedure_or_service with: night guard, bridge, sedation/anesthesia, oral surgery, sealant/fluoride, deep cleaning/scaling.
+Extend info_needed with: submission instructions, documentation requirements.
+Add an automated check that every call has exactly one is_primary = TRUE, and report how many rows use other in each field.
+Show me the updated calibration output, then I'll approve Step 5.
