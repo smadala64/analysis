@@ -39,21 +39,17 @@ Write scripts/02_deidentify.py using presidio-analyzer and presidio-anonymizer (
 - Writes ./raw/spotcheck_sample.txt containing 40 random calls showing original and cleaned text side by side, for ME to review. You must not open this file.
 Then STOP and tell me: "De-identification done. Please review ./raw/spotcheck_sample.txt and confirm before I read any transcripts." Wait for my confirmation. If I report misses, update the recognizers and rerun.
 
-STEP 3 – Find why people called (only after I confirm)
-Process ./clean/transcripts_clean.jsonl in batches of 20 calls. For each call, identify every distinct reason the caller called (a call can have more than one topic). For each topic return:
-- call_no
-- caller_type: member | provider | broker/employer | other | unknown
-- reason: 5–8 words in plain language (e.g. "asked if crown covered at 50%")
-- category: one of [Benefits & coverage, Eligibility, Claims status, Claim dispute/appeal, Find a dentist/network, ID card, Billing & premiums, Website/app/login, Enrollment & plan changes, Provider credentialing/admin, Other]
-- subcategory: short free text (e.g. "procedure coverage", "deductible", "maximum remaining", "waiting period", "list emailed vs read by phone")
-- is_primary: true for the main reason of the call
-- resolved_on_call: yes | no | unclear
-Append the results to ./output/topics.csv. Do not include any quotes from the transcript in topics.csv.
-Rules: use only what is in the transcript; if unsure, use category Other and say why in the reason; don't invent details. Keep going until every call is processed, and report progress after every 5 batches.
+STEP 3 – Discover why people called (only after I confirm the spot-check)
+Work only from ./clean/transcripts_clean.jsonl. I am NOT giving you a category list. Your job is to discover it.
+- Decide your own approach. You may write and run Python to chunk, sample, embed, cluster or count; explain briefly what you chose and why.
+- For each call, capture each distinct reason for calling in 5–8 words, plus caller type (member / provider / other / unknown). Save to ./output/topics.csv (no transcript quotes).
+- From the topics, build the categories and subcategories bottom-up: group similar reasons, name each group, write a one-line definition and count calls in each.
+- Then go one level deeper on the 3 largest categories: what specific kinds of questions sit inside them (e.g. within claims: denial reason, payment status, EOB confusion) and what details would make them actionable (procedure, plan feature, delivery method, etc.).
+- Report anything unexpected, and anything that doesn't fit, rather than forcing it into a category.
+- All counts must come from code over the full file, not from your reading of a subset. Say which numbers are exact counts and which are estimates from a sample.
 
-STEP 4 – Clean up categories
-- Read ./output/topics.csv (reasons only, no transcripts). Merge near-duplicate subcategories, propose a tidy category -> subcategory list, and apply it in a new column final_subcategory. Save it as ./output/topics_final.csv and the list as ./output/category_list.md (with a one-line definition per subcategory).
-- List the 10 most common reasons that landed in "Other", and suggest whether any deserve their own category.
+STEP 4 – Write it up
+./output/category_list.md (discovered categories, subcategories and definitions), ./output/call_reasons_summary.xlsx (counts and % by category/subcategory and caller type), and ./output/call_reasons_summary.md (one page: top reasons, deep-dive findings for the top 3 categories, surprises, and 1–2 de-identified example snippets per top subcategory).
 
 STEP 5 – Summarize
 Write scripts/05_summary.py that produces ./output/call_reasons_summary.xlsx with sheets:
