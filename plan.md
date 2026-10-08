@@ -55,28 +55,61 @@ STEP 4 – Discover the claims question types (you decide the method)
   - bot suitability: Self-service (answerable from a data lookup) / Assisted (needs explanation or judgment, bot can draft) / Human (dispute, appeal, exception)
 - Save as ./output/claims_taxonomy.md and STOP for my review before Step 5.
 
-STEP 5 – Classify a sample for percentages (after I approve the taxonomy)
-- Draw a NEW random sample of CLASSIFY_SAMPLE_SIZE claims calls (exclude the discovery sample if possible).
-- For every call, read the clean text and record each claims question with: call_no, caller_type, category, question_type, sub_type (if applicable), is_primary (main reason of the call), resolved_on_call (yes/no/unclear), resolution_type, bot_suitability. No transcript quotes in this file. Save to ./output/claims_questions.csv.
-- Also record per call: number of claims questions and whether the call had non-claims topics too.
-- Use only what's in the transcript. If unsure, mark Other or unclear; never guess.
-- Report progress every 50 calls.
+STEP 5 – Classify ALL claims calls
+Only start after I approve the taxonomy from Step 4. This step replaces the 600-call sample: every claims call is classified, so all percentages are exact counts over the full two weeks.
 
-STEP 6 – Compute and package (scripts/06_report.py; all numbers from code)
-Produce ./output/claims_analysis.xlsx with sheets:
-- Overview: window, total calls, claims calls and % of all calls, member vs provider split, sample sizes, 95% margin of error for sample-based percentages, keyword-filter precision/recall estimates.
-- By category: count and % per call (primary reason) AND per question, split member / provider, with margin of error.
-- By question type: same, at the question-type and sub-type level.
-- Question catalog: one row per question type, with definition, % of claims calls, % of claims questions, member/provider split, typical phrasings, caller provides, agent looks up, usual resolution, % resolved on call, bot suitability.
-- Sample phrasings: 5–10 de-identified example phrasings per question type (for chatbot intent design and test cases).
-- Data: claims_questions.csv.
-And ./output/claims_summary.md, a 1–2 page plain-English summary for the chatbot team covering:
-  - how big claims is
-  - the top 10 claims question types with % (member vs provider)
-  - for each of the top 5: what callers ask, what's needed to answer, and how suitable it is for the bot
-  - a suggested priority order for the claims agent (high volume + self-service first)
-  - surprises
-  - method and caveats (sample-based, de-identified, AI-classified, keyword filter accuracy)
+PRIVACY (unchanged)
+Read transcript text only from ./clean/. Never open ./raw/. Outputs use call_no only. Paraphrases must come from de-identified text and keep placeholders such as [NAME] or [ID_NUMBER]; never reconstruct or guess removed details.
+
+A. SET-UP (do this before classifying anything)
+1. Freeze the taxonomy. Write ./output/claims_taxonomy_frozen.json with a short code for every category, question type and sub-type (e.g. STAT = Claim status, DEN.FREQ = Denial – frequency limit), plus a one-line definition and 1–2 example phrasings for each. Include OTHER at each level. Do not change the taxonomy during Step 5; questions that don't fit get OTHER with a note.
+2. Trim the input with a script. Write scripts/05a_trim.py to remove IVR prompts, hold messages, standard greetings and closings, and repeated identity-verification boilerplate from ./clean text, keeping every caller question and agent answer. Save as ./clean/claims_trimmed.jsonl (claims calls only). Report average length before and after.
+3. Build the calibration set. Choose 20 claims calls from the discovery sample that cover the main question types, classify them using the format below, and save them as ./output/calibration.csv. STOP and ask me to review it before continuing.
+4. Create the work queue. ./output/queue.csv lists every claims call_no in random order with status = pending.
+5. Write ./output/STEP5_INSTRUCTIONS.md containing this whole step, the taxonomy codes and the output formats, so any new chat session can resume exactly the same way.
+
+B. OUTPUT FORMAT
+Per question – one row per claims question in ./output/claims_questions.csv:
+- call_no
+- caller_type: member / provider / other / unknown
+- category_code, question_type_code, sub_type_code (from the frozen taxonomy)
+- caller_question: the caller's question paraphrased in 10–20 words from the de-identified text, e.g. "Why was my crown claim from last month denied when my dentist said it was covered?"
+- procedure_or_service: crown, cleaning, filling, root canal, extraction, denture, implant, x-ray, exam, orthodontics, periodontal, other, none
+- info_needed: what the agent had to look up or tell the caller to answer, one or more of: claim status, paid amount, patient balance, denial reason, EOB copy, eligibility, deductible/maximum used, frequency/waiting period rule, provider network status, payment/check details, appeal process, other
+- is_primary: true for the main reason for the call (exactly one per call)
+- resolved_on_call: yes / no / unclear
+- resolution_type: answered / sent EOB or document / reprocessing or ticket opened / transferred / told to contact provider or other party / callback / unclear
+- bot_suitability: self-service (answerable from a data lookup) / assisted (needs explanation or judgment) / human (dispute, appeal, exception)
+- note: only when a code is OTHER or something is unclear
+
+Per call – one row per call in ./output/claims_calls_coded.csv:
+- call_no, number_of_claims_questions, has_non_claims_topics (true/false), not_claims (true if the call is not about claims at all; such calls get no question rows), batch_no
+
+C. CLASSIFICATION LOOP
+- Take the next 25 pending calls from queue.csv and read them from ./clean/claims_trimmed.jsonl.
+- Classify each call into the formats above, using only what is in the transcript. If unsure, use OTHER or unclear; never guess.
+- After each batch: append the rows to both CSVs immediately, mark the calls done in queue.csv, and update ./output/progress.json (batches done, calls done, calls remaining, timestamp).
+- Every 10 batches, report: calls done / remaining, the top 5 question types so far, % coded OTHER, and % flagged not_claims.
+
+D. CONSISTENCY CHECKS
+- Every 20 batches, re-classify the 20 calibration calls without looking at your earlier answers and compare. If agreement on question_type_code is below 90%, stop and tell me which codes are drifting.
+- At the start of every new chat session, read STEP5_INSTRUCTIONS.md and the frozen taxonomy, re-run the calibration check, then continue from queue.csv.
+
+E. COMPLETION CHECKS
+- Confirm every queued call is done, there are no duplicate call_no rows in claims_calls_coded.csv, and every non-not_claims call has exactly one is_primary question.
+- Blind re-check: re-classify 100 random completed calls and report agreement by category. If it is below 90% for any category, tell me before producing the report.
+- OTHER review: group everything coded OTHER by its notes, with counts, and suggest whether any new question types are needed. Wait for my decision before reclassifying.
+- Report the not_claims count and rate. These are keyword-filter false positives and are excluded from all claims percentages, but reported separately along with the corrected claims share of all calls.
+Then continue to Step 6.
+
+STEP 6 – REPORT CHANGES (apply to the Step 6 instructions)
+- All percentages are exact counts over all classified claims calls (excluding not_claims). Remove margin-of-error columns.
+- Overview: total calls in window, claims calls (after removing not_claims), claims % of all calls, member vs provider split, with and without the pre-treatment coverage category.
+- Top questions: for each question type and sub-type ranked by volume, show count, % of claims calls (primary reason), % of claims questions, member/provider split, % resolved on call, bot suitability, and 5 varied caller_question examples.
+- Procedure drill-down: question type × procedure_or_service counts and %.
+- Info needed: for each question type, the share of each info_needed value (which data lookups the claims agent must support).
+- Question catalog and sample phrasings sheets as before, using caller_question for the examples.
+- claims_summary.md: top 10 claims questions with %, a drill-down with examples for the top 5, what each needs to be answered, a suggested build order for the claims agent (high volume and self-service first), surprises, and method notes (de-identified, AI-classified, full two-week count, keyword filter accuracy, consistency check results).
 
 WORKING STYLE
 - Before each step, tell me your plan in 3–5 lines, then build it.
