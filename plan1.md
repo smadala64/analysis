@@ -73,3 +73,26 @@ the revised claims call count
 the info_needed draft
 
 I'll confirm before you finalize.
+:
+:
+:
+:
+:
+:
+
+
+
+Confirmed: use 12,712 as an external population denominator. It's an aggregate count, not PHI, so it's fine to use. It's the total number of transcripts in the TRANSCRIPT table for 2026-09-21 to 2026-10-04, from the original extraction, the same count behind "5,170 = 41% of 12,712".
+
+Look for it in the existing extraction or discovery logs or count files. If it isn't recorded anywhere, run a read-only SELECT COUNT(*) on TRANSCRIPT for the same date filter used in extraction. Report the count only; read no text.
+Record the source and the query or filter used in the Notes tab.
+
+Use two clearly labelled bases throughout:
+
+% of all calls (base 12,712): for the headline "how much of call volume is claims"
+% of screened calls (base 5,170): calls that passed the claims keyword filter
+plus % of claims calls and % of claims questions (bases after scope exclusion) for the rankings
+
+Never call 5,170 "all calls". Add the caveat that the claims share of all calls is a floor, because calls not caught by the keyword filter weren't reviewed.
+
+The checkpoint plan is approved as you described. Send the group list with scope and counts, the other/ungrouped rate, the revised claims call count with exclusions by scope (pretreatment shown separately), and the info_needed / bot_suitability draft. Then wait for my confirmation before building the final deliverables.
