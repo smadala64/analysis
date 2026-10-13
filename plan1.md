@@ -1,70 +1,31 @@
-Update to chat_examples.xlsx: conversation summaries and separate member/provider lists
+Rewrite the chat_response column in chat_examples_v2.xlsx
 
-My manager reviewed chat_examples.xlsx. The caller_spoken excerpts are hard to understand out of context, and he wants separate lists for members and providers. Produce a new version, ./output/chat_examples_v2.xlsx. All earlier privacy rules still apply: work only from de-identified data in ./clean/, never read or print ./raw/, never output TRANSCRIPT_ID, and put outputs in ./output/.
+The chat_response values you populated are a generic template repeated across almost every example, e.g. “I can help clarify your question about a request to reconsider a claim decision. The documented handoff is needed for further help, so this issue was not marked resolved.” That isn’t acceptable. It ignores the conversation, exposes internal analysis terms, and gives no answer or next step. Discard them and rewrite using the rules below. Work only from de-identified data; all privacy rules still apply.
 
-Problems found in v1 (avoid them in v2):
+What chat_response is: how a well-designed claims chatbot would reply to that row’s chat_version.
 
-caller_spoken often contains the agent’s speech (e.g. “I’m showing here a medicare advantage plan…”) or unrelated fragments (“thank you”, “huh”, Spanish fragments). The transcripts may not have reliable speaker labels.
-Several rows look misaligned: the excerpt, the question and the chat version don’t seem to come from the same call or question.
-Possible PII leak: one excerpt contains “sachs says you were inquiring”, which looks like a surname that de-identification missed.
-Some caller_question paraphrases may not match what actually happened. For example, “Why was dental consultation claim denied?” isn’t supported by its excerpt.
+How to write it:
 
-1. Separate member and provider lists
+Write each response individually from that example’s conversation_summary. Don’t fill in a template or generate the text with a script.
+Base it on what actually happened in the call: use the facts and explanation from the summary. Don’t invent reasons, amounts, policies or outcomes.
+Answer the question: state the status, reason or explanation, not just “I can help with that”.
+Mark looked-up data in [square brackets], i.e. anything the bot would retrieve from a system, e.g. “Your claim for [crown] from [date of service] was denied because [reason from claim record].”
+Include at least one specific detail from the summary: the procedure, status, reason or next step.
+Tone: friendly, plain language, 2–5 sentences. Members are addressed directly (“your claim”). Providers get office-appropriate wording (“the claim for your patient…”, “please resubmit with…”).
+Next step: end with one where relevant (how to appeal, what to send, a timeline, or offering a human agent).
 
-Rank the claims groups separately by % of member claims calls and by % of provider claims calls. Take the top 10 groups for each.
-Calls from someone acting on behalf of a member (parent, spouse, guardian) count as member. Exclude “other” caller types and report how many were excluded.
-For each group, randomly select 20 questions from that caller type. Prefer is_primary = true and avoid near-duplicates. Fix the random seed and record it.
-If a group has fewer than 20 calls for that caller type, use all of them and note the count. Don’t pad.
-You may reuse the v1 examples where they fit, but re-check each one against steps 2–4.
+What to avoid:
 
-2. Conversation summary (replaces caller_spoken)
+Internal or analysis terms: resolved, unresolved, handoff, documented, group, scope, category, flag
+Promising payment or approval, giving clinical advice, or including personal details
 
-For each example, read the clean transcript for that call_no and write a short summary of the part of the conversation about this claims question only (ignore unrelated topics in the call). Write 3–5 plain-English sentences covering:
+Handoff cases: if a bot can’t reasonably handle it (complex dispute, complaint, needs investigation), still acknowledge the specific issue, then hand off naturally. For example: “I can see your [implant] claim was paid at [a lower amount than expected] and you’d like it reviewed. This needs a claims specialist to look into it. I’ll connect you now, or you can request a callback.”
 
-Who and situation: member or provider, and the background (what treatment or service, roughly when, what happened with the claim: denied, paid less than expected, pending, billed unexpectedly)
-What they asked or wanted
-What the agent found or explained: status, reason, rule, next step
-Outcome: resolved on the call, follow-up needed (callback, appeal, resubmission, send records), or transferred
+Example of a good response. This one is for a member asking to reconsider a denied crown claim, where the summary says it was denied for missing x-rays and the dentist can resubmit:
 
-Because speaker labels may be unreliable, work out who said what from context.
+“I see your request to reconsider the [crown] claim from [date of service]. It was denied because [the claim was missing x-rays needed for review]. The easiest fix is for your dentist’s office to resubmit the claim with the x-rays. You can also file an appeal within [appeal deadline] if you disagree. Want me to show you how?”
 
-Plain language: write it so someone outside the claims team can follow it. When a dental or insurance term appears (e.g. consultation, core buildup, predetermination, COB, EOB, downgrade, frequency limit, alternate benefit), add a short explanation in brackets the first time it’s used.
+Add two columns after chat_response:
 
-3. Verify and correct
-
-Check that each row’s question, summary and chat version all come from the same call_no and the same question. Report any misalignment you find in v1.
-If the summary shows the caller_question paraphrase is wrong, correct caller_question.
-If the example doesn’t belong in its group after reading the conversation, set fit_flag = “possible misfit” with a one-line reason. Don’t move it; I’ll review.
-
-4. Chat version
-
-Regenerate chat_version so it matches the corrected question and summary:
-
-Assume the user is already logged in and verified. No name, ID or DOB.
-Members write in the first person (“my crown claim…”, “my daughter’s braces…”). Providers write as an office (“our claim for the patient…”, “we submitted x-rays…”).
-Keep the same intent and details (procedure, status, timing). Don’t add facts.
-Vary the style across each group’s examples: some short keyword-style (“crown claim denied why”), mostly natural full sentences, some frustrated or urgent. Record the style in chat_style.
-No placeholders; use generic words (“my dentist”, “last month”).
-
-5. Privacy check
-
-Remove the caller_spoken column from the deliverable entirely.
-No names, dates of birth, member/claim/phone numbers, addresses or exact dates in any text column. Use generic wording (“the member’s daughter”, “last month”, “the dentist’s office”).
-Run a PII check on every text column (conversation_summary, caller_question, chat_version) with extra attention to names. Report the replacements made.
-
-6. Output: ./output/chat_examples_v2.xlsx
-
-Overview: two ranking tables side by side, one for members and one for providers. Each has rank, group name, call count, % of that caller type’s claims calls, and the number of examples included.
-Member examples and Provider examples, each with columns in this order: rank, group_name, example_no, call_no, conversation_summary, outcome (resolved / follow-up / transferred / unclear), caller_question, chat_version, chat_style, fit_flag, fits_group (blank, for my review), reviewer_notes (blank)
-Notes: method, random seed, date range, the de-identification note, and any groups with fewer than 20 examples.
-
-Format for readability: wrap text, freeze the header row, keep the summary column wide, and use filters on the header.
-
-7. Report back to me
-
-Number of examples per tab, and groups with fewer than 20
-Number of “other” caller-type calls excluded
-Misalignments found in v1
-Paraphrases corrected
-Possible misfits per group
-PII replacements made
+bot_data_needed: the data or systems needed for the reply (e.g. claim status, denial reason code, EOB, appeal status, provider submission requirements)
+bot_handling: full / partial / handoff, with a one-line reason
