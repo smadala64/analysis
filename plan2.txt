@@ -1,10 +1,1 @@
-Thanks, the revised patterns look good. Before building the final workbook, confirm one thing: in the 50-question audits, did you read the full clean transcript of each call (not just the text near the question), and was the check done by reading rather than keyword matching? If it was local or keyword-based, redo the two audits by reading the full transcript of the same 50 calls and report the results. Re-extract only if the result is above 20%.
-
-Then build procedure_coverage_drilldown.xlsx with:
-
-Summary tab: key findings in plain English, including the 2,793 → 2,221 change from contextual reclassification, the top question types, the top friction reasons, and the data-capture gaps (procedure not stated in 35%, trigger not stated in 79%).
-Procedure family × question type matrix.
-Friction reasons, labelled clearly as “of 461 questions with an explicit reason”, with procedures, resolved %, member/provider split and 2 de-identified examples each.
-Self-service/chatbot opportunity: friction reasons with high volume and a high resolved-on-call rate (answerable from plan data), e.g. waiting period, frequency limit, annual maximum.
-Recommended data elements with capture rates.
-Method and audit: how it was done, the audit results, and caveats.
+One addition: the friction reasons were probably also derived from local windows and pattern matching. Include a third audit: take a seeded random 50 of the 1,760 procedure-coverage questions that have no friction reason, read each full transcript, and report how many actually show an explicit reason. If more than 20% do, re-derive friction reasons from full-transcript reading for the whole group, still without inferring a reason that isn’t stated. Report all three audit results before building the workbook.
