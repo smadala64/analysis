@@ -1,13 +1,10 @@
-Good progress. The contextual reclassification (2,793 → 2,221) is useful. Before building the final workbook, please revise the draft:
+Thanks, the revised patterns look good. Before building the final workbook, confirm one thing: in the 50-question audits, did you read the full clean transcript of each call (not just the text near the question), and was the check done by reading rather than keyword matching? If it was local or keyword-based, redo the two audits by reading the full transcript of the same 50 calls and report the results. Re-extract only if the result is above 20%.
 
-Check “procedure not specified”: take a random 50 of the 775 questions and read the clean transcript around each one. Report how many actually mention a procedure. If more than 20% do, re-extract the procedure from the transcript (not just the question/context) for all 775 and recount.
-Check the trigger the same way: sample 50 of the questions with no stated trigger and report how many have one in the transcript (dentist recommendation, estimate received, plan change, new member, EOB received). Re-extract if more than 20% do.
-Add a “friction reason” dimension: why the caller needed to call. Discover these from the transcripts rather than from a fixed list. Examples to look for: the dentist quoted a different cost than the plan pays; unclear EOB or estimate; frequency limit; waiting period; downgrade or alternate benefit; annual maximum used up; age limit; missing-tooth clause; in- vs out-of-network difference; couldn’t find the answer online; plan or coverage changed. Report the top friction reasons with counts, %, and 2 de-identified examples each.
-Group procedures into families (preventive, basic restorative, major restorative, endodontics, periodontics, prosthodontics, implants, oral surgery, orthodontics), with the detailed procedure underneath.
-Present three views:
-(a) procedure family × question type (the current view, regrouped)
-(b) top 10 friction reasons, with the procedures most associated with each
-(c) resolved-on-call rate and member vs provider split for each friction reason
-Recommend data elements to capture for this subcategory, with how often each was identifiable.
+Then build procedure_coverage_drilldown.xlsx with:
 
-Show me the revised draft (counts only, no examples in chat) before building the final workbook.
+Summary tab: key findings in plain English, including the 2,793 → 2,221 change from contextual reclassification, the top question types, the top friction reasons, and the data-capture gaps (procedure not stated in 35%, trigger not stated in 79%).
+Procedure family × question type matrix.
+Friction reasons, labelled clearly as “of 461 questions with an explicit reason”, with procedures, resolved %, member/provider split and 2 de-identified examples each.
+Self-service/chatbot opportunity: friction reasons with high volume and a high resolved-on-call rate (answerable from plan data), e.g. waiting period, frequency limit, annual maximum.
+Recommended data elements with capture rates.
+Method and audit: how it was done, the audit results, and caveats.
