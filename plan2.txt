@@ -1,1 +1,35 @@
-One addition: the friction reasons were probably also derived from local windows and pattern matching. Include a third audit: take a seeded random 50 of the 1,760 procedure-coverage questions that have no friction reason, read each full transcript, and report how many actually show an explicit reason. If more than 20% do, re-derive friction reasons from full-transcript reading for the whole group, still without inferring a reason that isn’t stated. Report all three audit results before building the workbook.
+Final business version: Procedure coverage drill-down
+
+My manager wants a clean, easy-to-read drill-down of Benefits & Coverage → Procedure coverage. The question he wants answered: what exactly people are asking about procedure coverage, which procedures, where they get confused, and what we should capture in future. It’s for business readers, so show final results only. Don’t include before/after numbers, audit results, internal codes, or technical terms (e.g. “controlled-rule enrichment”, “fixed window”, “audit gate”, “cohort”).
+
+First, as an internal step that isn’t shown in the workbook: run a precision check on the top 5 friction reasons. Read the full clean transcripts for a seeded random 20 questions per reason and confirm the reason is correct. Refine and recount any reason below 85% correct. Report the results to me in chat only.
+
+Then create ./output/Procedure_Coverage_Drilldown.xlsx with these tabs:
+
+1. Key findings
+
+A short header: what this covers, the date range (Sep 21 – Oct 4), and the number of procedure-coverage questions and calls.
+5–6 headline takeaways in plain English, each with its number. For example: “Crowns are the most asked-about procedure (344 questions, 15%)”, “The most common reason for calling is that the dentist’s quote differs from what the plan will pay”, “1 in 5 callers doesn’t name the procedure”.
+A small table of the top 10 procedures by volume.
+
+2. Procedures
+Procedure families sorted by volume, with their procedures underneath, also sorted by volume. For each: question count, % of procedure-coverage questions, the main thing people ask about it (e.g. “is it covered” vs “how much will I pay”), and member vs provider split.
+
+3. Why people call
+The top reasons people needed to call (friction reasons), sorted by volume. For each: number of questions and %, a one-line plain-English description, the procedures most involved, % resolved on the call, member vs provider split, and 2 short de-identified example summaries.
+
+4. Procedure × reason
+A simple heat table: procedures (rows) × top reasons and question types (columns), with counts and shading, so hotspots stand out (e.g. Crowns × Dentist quote differs).
+
+5. Opportunities
+For the biggest hotspots, a short table: the issue, volume, and a suggested opportunity. For example: “chatbot or self-service can answer this from plan data” (frequent and usually resolved on the call), “clearer member communication” (e.g. waiting periods or exclusions explained up front), or “needs a human / process fix” (often unresolved). Keep the opportunities grounded in the data and label them as suggestions.
+
+6. Data to capture
+The data elements worth capturing for these calls in future (procedure, question type, reason, trigger, estimate/EOB involved, network status, resolved or not). For each: why it’s useful, and how often it was identifiable in these calls.
+
+7. Notes
+Five lines at most: the data source and dates, that all data is de-identified, that counts are per question (a call can have more than one), that procedure groupings are standard dental groupings and may differ from Delta Dental’s plan coverage classes, and the main data gap (procedure or trigger not always stated by callers).
+
+Formatting: clean and business-friendly. Wrap text, freeze headers, use readable column widths and a consistent colour scheme, and avoid code-style names (use “Questions”, not “question_count”).
+
+Report back to me in chat: the precision-check results per reason, and any counts that changed because of them.
