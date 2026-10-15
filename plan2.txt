@@ -1,42 +1,13 @@
-Prompt A: review-friendly taxonomy workbook
+Good progress. The contextual reclassification (2,793 → 2,221) is useful. Before building the final workbook, please revise the draft:
 
-Create ./output/taxonomy_review.xlsx from the existing taxonomy results (no reclassification):
+Check “procedure not specified”: take a random 50 of the 775 questions and read the clean transcript around each one. Report how many actually mention a procedure. If more than 20% do, re-extract the procedure from the transcript (not just the question/context) for all 775 and recount.
+Check the trigger the same way: sample 50 of the questions with no stated trigger and report how many have one in the transcript (dentist recommendation, estimate received, plan change, new member, EOB received). Re-extract if more than 20% do.
+Add a “friction reason” dimension: why the caller needed to call. Discover these from the transcripts rather than from a fixed list. Examples to look for: the dentist quoted a different cost than the plan pays; unclear EOB or estimate; frequency limit; waiting period; downgrade or alternate benefit; annual maximum used up; age limit; missing-tooth clause; in- vs out-of-network difference; couldn’t find the answer online; plan or coverage changed. Report the top friction reasons with counts, %, and 2 de-identified examples each.
+Group procedures into families (preventive, basic restorative, major restorative, endodontics, periodontics, prosthodontics, implants, oral surgery, orthodontics), with the detailed procedure underneath.
+Present three views:
+(a) procedure family × question type (the current view, regrouped)
+(b) top 10 friction reasons, with the procedures most associated with each
+(c) resolved-on-call rate and member vs provider split for each friction reason
+Recommend data elements to capture for this subcategory, with how often each was identifiable.
 
-Overview: total calls, total questions, calls with more than one question, resolved %, number of categories and subcategories, date range.
-By category: categories sorted by volume. Under each category, its subcategories sorted by volume, with question count, call count, % of all calls, % within category, member/provider split, and resolved %. Use grouped or indented rows so it reads as category → subcategory.
-Member view and Provider view: the same layout, using each caller type’s calls only, to show how the two differ.
-Definitions: each subcategory’s definition, include/exclude rules and 3 example questions.
-Method: a plain-English explanation of how the taxonomy was discovered (extract questions per call → group similar questions → roll up into categories → validate), including de-identification with Presidio.
-Keep it readable for business reviewers: wrapped text, frozen headers, no codes in the main view.
-
-Prompt B: fix classification with context
-
-Some questions are misclassified because they were classified from the short caller_question alone. Example: “How does an annual maximum affect payment for his root canal?” was classified as Claims → Claim payment, but it’s about planned treatment, so it belongs in Benefits & Coverage.
-
-Tighten the definitions. Claims subcategories (payment, status, denial, etc.) apply only when a claim has already been submitted or processed. Questions about planned or future treatment (coverage, cost, annual maximum, frequency) belong in Benefits & Coverage, or Pretreatment estimates if an estimate or predetermination is involved. Update the definitions and include/exclude rules for all affected subcategories.
-Add context to each question. For every question, create a question_context: a 1–2 sentence de-identified description from the clean transcript of the situation around that question (service planned or done, claim submitted or not, who the patient is relative to the caller). Classify using caller_question + question_context + the call’s other questions together.
-Reclassify the subcategories most affected: Claims (all), Benefits & Coverage (all), and Pretreatment. Report how many questions moved, and between which subcategories.
-Write the rules down in classification_rules.md: the step-by-step method, the definitions, the tie-break rules, and worked examples, including the root canal example. It should be clear enough for another person or agent to repeat the classification consistently.
-Blind-recheck 200 random reclassified questions and report agreement.
-Checkpoint: before reclassifying everything, show me 20 reclassified examples with before/after and the context used.
-
-Prompt C: drill-down discovery for Procedure coverage
-
-Drill into the largest subcategory, Benefits & Coverage → Procedure coverage (~2,793 questions). The goal is to find patterns that make it actionable: what exactly people are asking, and where the confusion and friction are.
-
-Use the question_context (from the updated classification) and, where needed, the clean transcript. Don’t rely on the short caller_question alone.
-Find patterns such as:
-Procedures: which procedures are asked about most (crowns, implants, root canals, orthodontics, dentures, cleanings…), with counts and %
-Type of question: is it covered at all; how much will I pay or what % is covered; frequency limits; waiting periods; annual maximum; network differences; age limits
-Triggers: dentist recommended treatment, received an estimate, plan change, new member
-Outcome: resolved on the call, or needed a follow-up
-Differences between member and provider callers
-Suggest the data elements worth capturing for this subcategory in future (e.g. procedure, question type, trigger, outcome), with how often each appears and why it’s useful. These will inform the database design.
-List the top 10 friction patterns: specific, frequent problems with volume and 2 de-identified examples each (e.g. “implant coverage confusion when the plan covers the crown but not the implant post”).
-Write the results to ./output/procedure_coverage_drilldown.xlsx with a 1-page summary tab.
-Checkpoint: show me the draft pattern list before building the workbook.
-Message to Wendy (DB standards)
-
-Hi Wendy, we’re exploring using AI to help produce first-draft table designs that already follow your standards, to cut down rework at review time, starting with the Call Analysis tables. Do you have documented database design standards we could use (naming conventions, PK/FK rules, audit columns, data types, column-length/abbreviation rules)? If not, would you be open to reviewing a draft set we put together from existing tables? A couple of examples of well-designed tables would also help. Thanks!
-
-Send Prompt A today so your manager gets the review workbook quickly. Prompts B and C can run after that.
+Show me the revised draft (counts only, no examples in chat) before building the final workbook.
