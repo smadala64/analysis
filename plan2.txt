@@ -1,7 +1,10 @@
-The format is right; keep the same 4 tabs and plain style. Please fix these content issues:
+The precision check shows the rule-based friction reasons aren’t reliable (10–75% correct), and the new rule-based counts haven’t been re-checked. Let’s switch to a reading-based sample instead of rules:
 
-Explain the change: the previous draft had “dentist quote differs from plan payment” (463) and “frequency or replacement limit” (213) among the top reasons, but they’re missing now, and stated problems dropped from 1,363 to 780. Share the precision-check results per reason and explain what happened. If these reasons are real, they must appear in the Top problems tab.
-Remove circular problems: “The caller needs to know whether the procedure is covered” restates the question. Go one level deeper using the full call: why was coverage in question? (excluded procedure, frequency limit, waiting period, plan type or tier, age limit, missing-tooth rule, or just checking before planned treatment because the dentist recommended it). Replace it with those specific reasons.
-Claims questions: “A submitted claim needs an update or explanation” belongs in the Claims category, not Procedure coverage. Move those questions out (or explain why they stay), and update all counts and the By procedure tab.
-Resolved numbers: in Data to capture, rename “Resolved or not” so it’s clear it means “resolution known”, or remove it, so it doesn’t conflict with the 71% resolved in the Summary.
-Update the Summary bullets to reflect the corrected top problems.
+Take a seeded random sample of 300 Procedure coverage questions.
+For each one, read the full clean transcript and decide the reason or problem yourself. Use no keyword rules or patterns. Assign one primary reason from the existing list, or “no reason stated”, or “other” with a short description. Multiple reasons are allowed if they’re clearly stated.
+Estimate each reason’s share of all Procedure coverage questions from the sample, with a ±margin (95%), and an estimated count (share × 2,098).
+Update the Top problems tab to use these estimates. Add the column “Estimated share (±margin)”, and use the sample for the procedures involved, resolved % and examples. Add one line under the table: “Reasons are estimated from a reading of 300 randomly selected questions.”
+Update the Summary bullets to match. Keep the procedure, question-type and Data to capture numbers as they are.
+Self-check: re-read 30 of the 300 without looking at your first answer, and report agreement in chat.
+
+Keep the same 4 tabs and plain style.
