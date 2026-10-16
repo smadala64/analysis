@@ -1,53 +1,7 @@
-Fresh prompt: simple Procedure coverage drill-down
+The format is right; keep the same 4 tabs and plain style. Please fix these content issues:
 
-My manager wants a simple, easy-to-read drill-down of Benefits & Coverage → Procedure coverage. The last version was too elaborate. Start fresh on the output, but reuse the data and enrichment you already produced (contextual classification, procedures, reasons). Don’t redo the analysis.
-
-What he wants answered, in his words:
-
-“Procedure coverage is too high level. What exactly is it about?”
-“Where are people getting confused? Is it specific to certain procedures?”
-“Where is the friction, and what are the high-frequency problems?”
-“What data elements should we capture for this subcategory in future?”
-
-Create ./output/Procedure_Coverage_Simple.xlsx with exactly 4 tabs:
-
-Tab 1: Summary (one screen, no scrolling)
-
-One line: “Procedure coverage: X questions from Y calls, Sep 21 – Oct 4.”
-“What we found”: 5 to 7 bullet points in plain English, each with a number. Example style:
-“Crowns are the most asked-about procedure: 344 questions (15%).”
-“The most common problem: the dentist’s quote is different from what the plan pays (N questions).”
-“1 in 5 callers don’t say which procedure they’re asking about.”
-“What this means”: 2 to 3 short bullets on the practical takeaway (e.g. which problems could be prevented with clearer information or answered by self-service). Only state what the data supports.
-
-Tab 2: Top problems (the main tab)
-A simple table, sorted by number of questions, top 10 only:
-
-| Problem (plain sentence) | Questions | % | Procedures most involved | Resolved on call % | Example (1 short de-identified summary) |
-
-Write each problem as a sentence a business person understands, e.g. “Member was told a different cost by their dentist than the plan will pay”, not a label or code.
-
-Tab 3: By procedure
-A simple table, sorted by number of questions, top 12 procedures plus “Not specified”:
-
-| Procedure | Questions | % | What people mostly ask (e.g. “Is it covered?” / “How much will I pay?”) | Most common problem for this procedure |
-
-Tab 4: Data to capture
-A simple table:
-
-| Data element | Why it’s useful | How often callers gave it |
-
-Include procedure, question type, reason or problem, what prompted the call (e.g. dentist estimate, plan change), whether an estimate or EOB was involved, network status, and resolved or not.
-
-Rules:
-
-Keep it simple: plain tables only. No charts, heat maps, dashboards, colour-coding (other than a plain header row), extra tabs, or notes sections.
-Plain English everywhere. No codes, field names, or technical terms (no “cohort”, “enrichment”, “controlled rule”, “audit”, “fixed window”, “before/after”).
-Don’t show audit results or before/after numbers in the workbook.
-Base problems on the context of the full call, not just the short question.
-All examples must be de-identified (no names, dates, IDs, amounts tied to a person).
-Numbers must add up (percentages are of all procedure-coverage questions).
-
-Before building it, do the precision check on the top 5 problems: read the full transcript for 20 random questions per problem, confirm the problem is correct, and fix any below 85%. Tell me the results in chat only, not in the workbook.
-
-When done, reply in chat with: the 5–7 summary bullets, and the precision-check results.
+Explain the change: the previous draft had “dentist quote differs from plan payment” (463) and “frequency or replacement limit” (213) among the top reasons, but they’re missing now, and stated problems dropped from 1,363 to 780. Share the precision-check results per reason and explain what happened. If these reasons are real, they must appear in the Top problems tab.
+Remove circular problems: “The caller needs to know whether the procedure is covered” restates the question. Go one level deeper using the full call: why was coverage in question? (excluded procedure, frequency limit, waiting period, plan type or tier, age limit, missing-tooth rule, or just checking before planned treatment because the dentist recommended it). Replace it with those specific reasons.
+Claims questions: “A submitted claim needs an update or explanation” belongs in the Claims category, not Procedure coverage. Move those questions out (or explain why they stay), and update all counts and the By procedure tab.
+Resolved numbers: in Data to capture, rename “Resolved or not” so it’s clear it means “resolution known”, or remove it, so it doesn’t conflict with the 71% resolved in the Summary.
+Update the Summary bullets to reflect the corrected top problems.
