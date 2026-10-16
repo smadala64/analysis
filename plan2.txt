@@ -1,35 +1,53 @@
-Final business version: Procedure coverage drill-down
+Fresh prompt: simple Procedure coverage drill-down
 
-My manager wants a clean, easy-to-read drill-down of Benefits & Coverage → Procedure coverage. The question he wants answered: what exactly people are asking about procedure coverage, which procedures, where they get confused, and what we should capture in future. It’s for business readers, so show final results only. Don’t include before/after numbers, audit results, internal codes, or technical terms (e.g. “controlled-rule enrichment”, “fixed window”, “audit gate”, “cohort”).
+My manager wants a simple, easy-to-read drill-down of Benefits & Coverage → Procedure coverage. The last version was too elaborate. Start fresh on the output, but reuse the data and enrichment you already produced (contextual classification, procedures, reasons). Don’t redo the analysis.
 
-First, as an internal step that isn’t shown in the workbook: run a precision check on the top 5 friction reasons. Read the full clean transcripts for a seeded random 20 questions per reason and confirm the reason is correct. Refine and recount any reason below 85% correct. Report the results to me in chat only.
+What he wants answered, in his words:
 
-Then create ./output/Procedure_Coverage_Drilldown.xlsx with these tabs:
+“Procedure coverage is too high level. What exactly is it about?”
+“Where are people getting confused? Is it specific to certain procedures?”
+“Where is the friction, and what are the high-frequency problems?”
+“What data elements should we capture for this subcategory in future?”
 
-1. Key findings
+Create ./output/Procedure_Coverage_Simple.xlsx with exactly 4 tabs:
 
-A short header: what this covers, the date range (Sep 21 – Oct 4), and the number of procedure-coverage questions and calls.
-5–6 headline takeaways in plain English, each with its number. For example: “Crowns are the most asked-about procedure (344 questions, 15%)”, “The most common reason for calling is that the dentist’s quote differs from what the plan will pay”, “1 in 5 callers doesn’t name the procedure”.
-A small table of the top 10 procedures by volume.
+Tab 1: Summary (one screen, no scrolling)
 
-2. Procedures
-Procedure families sorted by volume, with their procedures underneath, also sorted by volume. For each: question count, % of procedure-coverage questions, the main thing people ask about it (e.g. “is it covered” vs “how much will I pay”), and member vs provider split.
+One line: “Procedure coverage: X questions from Y calls, Sep 21 – Oct 4.”
+“What we found”: 5 to 7 bullet points in plain English, each with a number. Example style:
+“Crowns are the most asked-about procedure: 344 questions (15%).”
+“The most common problem: the dentist’s quote is different from what the plan pays (N questions).”
+“1 in 5 callers don’t say which procedure they’re asking about.”
+“What this means”: 2 to 3 short bullets on the practical takeaway (e.g. which problems could be prevented with clearer information or answered by self-service). Only state what the data supports.
 
-3. Why people call
-The top reasons people needed to call (friction reasons), sorted by volume. For each: number of questions and %, a one-line plain-English description, the procedures most involved, % resolved on the call, member vs provider split, and 2 short de-identified example summaries.
+Tab 2: Top problems (the main tab)
+A simple table, sorted by number of questions, top 10 only:
 
-4. Procedure × reason
-A simple heat table: procedures (rows) × top reasons and question types (columns), with counts and shading, so hotspots stand out (e.g. Crowns × Dentist quote differs).
+| Problem (plain sentence) | Questions | % | Procedures most involved | Resolved on call % | Example (1 short de-identified summary) |
 
-5. Opportunities
-For the biggest hotspots, a short table: the issue, volume, and a suggested opportunity. For example: “chatbot or self-service can answer this from plan data” (frequent and usually resolved on the call), “clearer member communication” (e.g. waiting periods or exclusions explained up front), or “needs a human / process fix” (often unresolved). Keep the opportunities grounded in the data and label them as suggestions.
+Write each problem as a sentence a business person understands, e.g. “Member was told a different cost by their dentist than the plan will pay”, not a label or code.
 
-6. Data to capture
-The data elements worth capturing for these calls in future (procedure, question type, reason, trigger, estimate/EOB involved, network status, resolved or not). For each: why it’s useful, and how often it was identifiable in these calls.
+Tab 3: By procedure
+A simple table, sorted by number of questions, top 12 procedures plus “Not specified”:
 
-7. Notes
-Five lines at most: the data source and dates, that all data is de-identified, that counts are per question (a call can have more than one), that procedure groupings are standard dental groupings and may differ from Delta Dental’s plan coverage classes, and the main data gap (procedure or trigger not always stated by callers).
+| Procedure | Questions | % | What people mostly ask (e.g. “Is it covered?” / “How much will I pay?”) | Most common problem for this procedure |
 
-Formatting: clean and business-friendly. Wrap text, freeze headers, use readable column widths and a consistent colour scheme, and avoid code-style names (use “Questions”, not “question_count”).
+Tab 4: Data to capture
+A simple table:
 
-Report back to me in chat: the precision-check results per reason, and any counts that changed because of them.
+| Data element | Why it’s useful | How often callers gave it |
+
+Include procedure, question type, reason or problem, what prompted the call (e.g. dentist estimate, plan change), whether an estimate or EOB was involved, network status, and resolved or not.
+
+Rules:
+
+Keep it simple: plain tables only. No charts, heat maps, dashboards, colour-coding (other than a plain header row), extra tabs, or notes sections.
+Plain English everywhere. No codes, field names, or technical terms (no “cohort”, “enrichment”, “controlled rule”, “audit”, “fixed window”, “before/after”).
+Don’t show audit results or before/after numbers in the workbook.
+Base problems on the context of the full call, not just the short question.
+All examples must be de-identified (no names, dates, IDs, amounts tied to a person).
+Numbers must add up (percentages are of all procedure-coverage questions).
+
+Before building it, do the precision check on the top 5 problems: read the full transcript for 20 random questions per problem, confirm the problem is correct, and fix any below 85%. Tell me the results in chat only, not in the workbook.
+
+When done, reply in chat with: the 5–7 summary bullets, and the precision-check results.
