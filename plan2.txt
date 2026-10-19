@@ -1,33 +1,34 @@
-Prompt: General plan or coverage information, full review
+Prompt: Pay premium or manage autopay, full review
 
-Run the same drill-down as Find a dentist for Benefits and coverage → General plan or coverage information (~2,278 questions). Review every question and report exact counts, not estimates.
+Run the same drill-down as Find a dentist for Billing and premiums → Pay premium or manage autopay. Use the current authoritative classification for the population, not the original 1,719 figure, and tell me the exact count before starting. Review every question and report exact counts, not estimates.
 
 Method:
 
-Read the full clean transcript for each question, in batches of 100, with checkpointing so the work can resume. Decide each item yourself. No keyword rules or pattern matching.
-Step 1: confirm it belongs. This subcategory is for general questions about the plan or coverage, not about a specific procedure, limit or balance. Using the existing taxonomy definitions, move a question out if it’s really about:
-a specific procedure → Procedure coverage
-maximum, deductible or remaining benefits → Maximum, deductible or benefit balance
-frequency, waiting period or replacement limits → Frequency, waiting or replacement limit
-whether coverage is active, or effective/termination dates → Eligibility
+Read the full clean transcript for each question, in batches of 100, with checkpointing. Decide each item yourself. No keyword rules or pattern matching.
+Step 1: confirm it belongs. This subcategory is for making a premium payment or managing how premiums are paid. Move a question out if it’s really about:
+how much the premium or invoice is, or why it changed → Premium or invoice amount
+enrolling, cancelling or changing the plan → Enroll, cancel or change plan
+coverage being active or terminated (with no payment action) → Eligibility
+claims or dentist bills (not premiums) → the correct Claims subcategory
 anything else → its correct subcategory
-Exclude moved questions from the analysis. Report how many moved and where they went.
+Exclude moved questions. Report how many moved and where they went.
 Step 2: for confirmed questions only, record:
-What they wanted to know: what the plan covers in general, coverage percentages by service type (preventive/basic/major), plan type or name, network type (PPO/Premier/DHMO/Medicaid…), plan year or renewal, who is covered (dependents), whether a benefit exists at all (e.g. orthodontics), a benefits summary or document, other (describe briefly)
-Why they called (the main reason): new member, plan changed or open enrollment, planning upcoming treatment, couldn’t find or understand the info online, received a document they didn’t understand, employer or group question, provider verifying a patient’s benefits, other (describe briefly)
-How the agent helped: explained over the phone, sent a benefits summary or document, directed to website or app, transferred, couldn’t help
-Plan or group context (if stated): plan type, employer group vs individual, government program
+What they wanted to do: make a one-time payment; set up autopay; change or cancel autopay; update card or bank details; check whether a payment was received or posted; resolve a failed, late or missed payment; ask about a refund or overpayment; find out how or where to pay (online, phone, mail address); change the billing date; other (describe briefly)
+Why they called (the main reason): couldn’t pay online or the website/app didn’t work; autopay failed or charged incorrectly; received a past-due or termination notice; new member making a first payment; changed bank or card; didn’t know how to pay; prefers to pay by phone; other (describe briefly)
+How the agent helped: took the payment on the call; set up or changed autopay; explained how to pay online; gave the mailing address or phone payment line; transferred to billing; couldn’t help
+Coverage at risk? Whether the caller mentioned past due, a grace period, termination or reinstatement (yes/no)
+Plan context (if stated): individual, employer group, Medicare or government program
 Outcome: resolved on the call, or follow-up needed
-Caller type: member or provider
+Caller type: member or other
 Quality check at the end: re-read 50 random confirmed questions blind and report agreement in chat.
 
-Output: ./output/General_Plan_Info_Simple.xlsx, same 4 tabs, exact counts:
+Output: ./output/Pay_Premium_Simple.xlsx, same 4 tabs, exact counts:
 
-Summary: the total reviewed; how many were confirmed and how many were moved out (and to which subcategories); then 5–7 plain-English findings and 2–3 “What this means” bullets (e.g. which questions the member portal, a benefits summary or the voice bot could answer).
-Top reasons: confirmed questions only. Columns: Reason | Questions | % | What they wanted to know most | Resolved on call % | Example
-What they needed: what they wanted to know, and how the agent helped, with counts and %. Show member and provider separately if they differ.
+Summary: the total reviewed; confirmed vs moved out (and where); 5–7 plain-English findings; 2–3 “What this means” bullets, especially which payment tasks could be handled by self-service (IVR, portal, voice bot) and what’s stopping callers from using it today.
+Top reasons: Reason | Questions | % | What they wanted to do most | Resolved on call % | Example
+What they needed: what they wanted to do, and how the agent helped, with counts and %. Include how often coverage was at risk.
 Data to capture: data element | why useful | how often it was identifiable.
 
-Rules: same simple style as Find_A_Dentist_Simple.xlsx. Plain tables, plain English, no charts, extra tabs, technical terms or template-like examples. Examples must be real de-identified summaries.
+Rules: same simple style as Find_A_Dentist_Simple.xlsx. Plain tables, plain English, no charts, extra tabs, technical terms or template-like examples. Examples must be real de-identified summaries, with no payment amounts, card or bank details.
 
-Reply in chat with: the confirmed vs moved-out counts and where they went, the summary bullets, and the blind-recheck agreement.
+Reply in chat with: the population count, confirmed vs moved-out counts and where they went, the summary bullets, and the blind-recheck agreement.
