@@ -1,27 +1,33 @@
-Prompt: Find a dentist, full review (no sampling)
+Prompt: General plan or coverage information, full review
 
-Replace the sample-based version. Review every question currently classified as Find a dentist and network → Find a dentist (~2,183) and report exact counts, not estimates.
+Run the same drill-down as Find a dentist for Benefits and coverage → General plan or coverage information (~2,278 questions). Review every question and report exact counts, not estimates.
 
 Method:
 
 Read the full clean transcript for each question, in batches of 100, with checkpointing so the work can resume. Decide each item yourself. No keyword rules or pattern matching.
-Step 1: confirm it belongs. For each question, decide whether the caller actually wanted to find, choose or confirm a dentist. If not (e.g. a billing, claim or coverage question), mark it “not Find a dentist”, record the correct subcategory from the existing taxonomy, and exclude it from the analysis. Report how many moved and where they went.
-Step 2: for confirmed Find a dentist questions only, record:
-What they were looking for: general dentist, specialist (which type), accepting new patients, specific named dentist, location or distance, language, hours, dentist for a specific procedure
-Why they called (the main reason): new member, moved, plan or coverage changed, dentist or directory gave wrong network info, couldn’t find or use the online search, prefers phone or no internet, provider or support worker calling for a patient, other (describe briefly)
-How the agent helped: read options over the phone, emailed list, mailed list, directed to website or app, transferred, couldn’t help
-Network or plan detail (if stated): plan type, in network or not
+Step 1: confirm it belongs. This subcategory is for general questions about the plan or coverage, not about a specific procedure, limit or balance. Using the existing taxonomy definitions, move a question out if it’s really about:
+a specific procedure → Procedure coverage
+maximum, deductible or remaining benefits → Maximum, deductible or benefit balance
+frequency, waiting period or replacement limits → Frequency, waiting or replacement limit
+whether coverage is active, or effective/termination dates → Eligibility
+anything else → its correct subcategory
+Exclude moved questions from the analysis. Report how many moved and where they went.
+Step 2: for confirmed questions only, record:
+What they wanted to know: what the plan covers in general, coverage percentages by service type (preventive/basic/major), plan type or name, network type (PPO/Premier/DHMO/Medicaid…), plan year or renewal, who is covered (dependents), whether a benefit exists at all (e.g. orthodontics), a benefits summary or document, other (describe briefly)
+Why they called (the main reason): new member, plan changed or open enrollment, planning upcoming treatment, couldn’t find or understand the info online, received a document they didn’t understand, employer or group question, provider verifying a patient’s benefits, other (describe briefly)
+How the agent helped: explained over the phone, sent a benefits summary or document, directed to website or app, transferred, couldn’t help
+Plan or group context (if stated): plan type, employer group vs individual, government program
 Outcome: resolved on the call, or follow-up needed
 Caller type: member or provider
 Quality check at the end: re-read 50 random confirmed questions blind and report agreement in chat.
 
-Output: ./output/Find_A_Dentist_Simple.xlsx, same 4 tabs, exact counts:
+Output: ./output/General_Plan_Info_Simple.xlsx, same 4 tabs, exact counts:
 
-Summary: the total reviewed; how many were confirmed Find a dentist and how many were moved out (and to which subcategories); then 5–7 plain-English findings and 2–3 “What this means” bullets.
-Top reasons: confirmed questions only. Columns: Reason | Questions | % | What they were looking for most | Resolved on call % | Example. Remove the ± margin column and the sample note.
-What they needed: what they were looking for, and how the agent helped, with counts and %.
+Summary: the total reviewed; how many were confirmed and how many were moved out (and to which subcategories); then 5–7 plain-English findings and 2–3 “What this means” bullets (e.g. which questions the member portal, a benefits summary or the voice bot could answer).
+Top reasons: confirmed questions only. Columns: Reason | Questions | % | What they wanted to know most | Resolved on call % | Example
+What they needed: what they wanted to know, and how the agent helped, with counts and %. Show member and provider separately if they differ.
 Data to capture: data element | why useful | how often it was identifiable.
 
-Rules: keep the same simple style. Plain tables, plain English. No charts, extra tabs, technical terms or template-like examples. Examples must be real de-identified summaries.
+Rules: same simple style as Find_A_Dentist_Simple.xlsx. Plain tables, plain English, no charts, extra tabs, technical terms or template-like examples. Examples must be real de-identified summaries.
 
-Reply in chat with: the confirmed vs moved-out counts, where the moved questions belong, the summary bullets, and the blind-recheck agreement.
+Reply in chat with: the confirmed vs moved-out counts and where they went, the summary bullets, and the blind-recheck agreement.
