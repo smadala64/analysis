@@ -1,10 +1,34 @@
-The precision check shows the rule-based friction reasons aren’t reliable (10–75% correct), and the new rule-based counts haven’t been re-checked. Let’s switch to a reading-based sample instead of rules:
+Prompt: Find a dentist drill-down
 
-Take a seeded random sample of 300 Procedure coverage questions.
-For each one, read the full clean transcript and decide the reason or problem yourself. Use no keyword rules or patterns. Assign one primary reason from the existing list, or “no reason stated”, or “other” with a short description. Multiple reasons are allowed if they’re clearly stated.
-Estimate each reason’s share of all Procedure coverage questions from the sample, with a ±margin (95%), and an estimated count (share × 2,098).
-Update the Top problems tab to use these estimates. Add the column “Estimated share (±margin)”, and use the sample for the procedures involved, resolved % and examples. Add one line under the table: “Reasons are estimated from a reading of 300 randomly selected questions.”
-Update the Summary bullets to match. Keep the procedure, question-type and Data to capture numbers as they are.
+Repeat the Procedure coverage drill-down for Find a dentist and network → Find a dentist (about 2,183 questions). My manager wants to understand what exactly people need when they call to find a dentist, why they call instead of using self-service, and what data we should capture for this subcategory in future.
+
+Method (important):
+
+Use the existing taxonomy classification for the total volume of the subcategory.
+For everything else (what they were looking for, why they called, what was provided, outcome), use a reading-based sample: a seeded random sample of 300 Find a dentist questions. For each one, read the full clean transcript and decide yourself. No keyword rules or pattern matching.
+Give estimates as share ± margin (95%) and estimated count (share × total).
 Self-check: re-read 30 of the 300 without looking at your first answer, and report agreement in chat.
+All examples must be real de-identified summaries of sampled calls. Don’t reuse template phrases.
 
-Keep the same 4 tabs and plain style.
+What to look for in each sampled call:
+
+What they were looking for: general dentist, a specialist (which type: orthodontist, oral surgeon, endodontist, pediatric…), accepting new patients, location or distance, language, hours, a specific named dentist, a dentist for a specific procedure
+Why they called rather than searching online: couldn’t find or use the online search, the results were wrong or outdated, the dentist said they’re not in network, new member, moved, plan changed, no internet access or prefers phone, the provider was calling on a patient’s behalf
+What the agent did: read dentists over the phone, emailed or mailed a list, directed the caller to the website or app, transferred, couldn’t help
+Network or plan detail involved: in network for the member’s plan, plan type (PPO/Premier/Medicaid, etc.), out of network
+Outcome: resolved on the call, follow-up needed
+Caller type: member vs provider
+
+Create ./output/Find_A_Dentist_Simple.xlsx with exactly 4 tabs, plain tables only:
+
+1. Summary: one line with the volume and dates, then 5–7 plain-English findings with numbers, then 2–3 “What this means” bullets (e.g. what self-service or the voice bot could handle).
+
+2. Top reasons: why people called, sorted by estimated share. Columns: Reason (plain sentence) | Estimated questions | Share ± margin | What they were looking for most | Resolved on call % | Example. Add the line: “Reasons are estimated from a reading of 300 randomly selected questions.”
+
+3. What they needed: what callers were looking for (general dentist, specialist type, new patients, location, language…) with estimated share, and how the agent helped (read over phone / emailed / directed online / transferred) with estimated share.
+
+4. Data to capture: data element | why it’s useful | how often it was identifiable in the calls. Include: what they were looking for, specialty, location given, why they called, how the result was delivered, network/plan type, outcome.
+
+Rules: keep the same simple style as Procedure_Coverage_Simple.xlsx. No charts, heat maps, colour-coding, extra tabs, audit details or technical terms.
+
+Reply in chat with: the summary bullets, the self-check agreement, and any reason or finding you weren’t confident about.
