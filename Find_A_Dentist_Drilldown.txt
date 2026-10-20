@@ -1,0 +1,27 @@
+Prompt: Find a dentist, full review (no sampling)
+
+Replace the sample-based version. Review every question currently classified as Find a dentist and network → Find a dentist (~2,183) and report exact counts, not estimates.
+
+Method:
+
+Read the full clean transcript for each question, in batches of 100, with checkpointing so the work can resume. Decide each item yourself. No keyword rules or pattern matching.
+Step 1: confirm it belongs. For each question, decide whether the caller actually wanted to find, choose or confirm a dentist. If not (e.g. a billing, claim or coverage question), mark it “not Find a dentist”, record the correct subcategory from the existing taxonomy, and exclude it from the analysis. Report how many moved and where they went.
+Step 2: for confirmed Find a dentist questions only, record:
+What they were looking for: general dentist, specialist (which type), accepting new patients, specific named dentist, location or distance, language, hours, dentist for a specific procedure
+Why they called (the main reason): new member, moved, plan or coverage changed, dentist or directory gave wrong network info, couldn’t find or use the online search, prefers phone or no internet, provider or support worker calling for a patient, other (describe briefly)
+How the agent helped: read options over the phone, emailed list, mailed list, directed to website or app, transferred, couldn’t help
+Network or plan detail (if stated): plan type, in network or not
+Outcome: resolved on the call, or follow-up needed
+Caller type: member or provider
+Quality check at the end: re-read 50 random confirmed questions blind and report agreement in chat.
+
+Output: ./output/Find_A_Dentist_Simple.xlsx, same 4 tabs, exact counts:
+
+Summary: the total reviewed; how many were confirmed Find a dentist and how many were moved out (and to which subcategories); then 5–7 plain-English findings and 2–3 “What this means” bullets.
+Top reasons: confirmed questions only. Columns: Reason | Questions | % | What they were looking for most | Resolved on call % | Example. Remove the ± margin column and the sample note.
+What they needed: what they were looking for, and how the agent helped, with counts and %.
+Data to capture: data element | why useful | how often it was identifiable.
+
+Rules: keep the same simple style. Plain tables, plain English. No charts, extra tabs, technical terms or template-like examples. Examples must be real de-identified summaries.
+
+Reply in chat with: the confirmed vs moved-out counts, where the moved questions belong, the summary bullets, and the blind-recheck agreement.
