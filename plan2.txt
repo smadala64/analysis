@@ -1,33 +1,65 @@
-Prompt: ID card or member identifier, full review
+ROLE
+You are a data analyst on a healthcare call-center AI project. The data contains PHI/PII. Process it only in this approved environment. Never send raw names, member IDs, addresses, phone numbers, or DOBs to any external service.
 
-Run the same drill-down as Find a dentist for Member account and documents → ID card or member identifier. Use the current authoritative classification for the population, not the original 1,279 figure, and tell me the exact count before starting. Review every question and report exact counts, not estimates.
+GOAL
+Our AI grievance detector flags more grievances than customer service reps (CSRs) do. A second-stage adjudicator re-checks each AI flag. Find out why CSRs are not recognizing the grievances that the AI flags and the adjudicator retains. Then decide, pattern by pattern, whether the cause is a CSR miss, AI over-flagging, or something else.
 
-Method:
+INPUT
+Excel file: <PATH_TO_FILE>. One row per detection. Columns:
+Case ID, Transcript ID, Interaction ID, Call Date, CSR / Owning User, Detection ID, Detection Type, Candidate Grievance, Triggering Passage, AI Summary, Full Simplified Transcript, Decision, Reason Code, Evidence, Criterion, Rationale, Additional Review, CSR Grievance, Model, Response ID, Processed At, Request Seconds, Error, CSR Grievance2, AI Grievance, Adjudicator Decision, AI False-Positive, Adjudicator Grievance, Adjudicator False-Positive
 
-Read the full clean transcript for each question, in batches of 100, with checkpointing. Decide each item yourself. No keyword rules or pattern matching.
-Step 1: confirm it belongs. This subcategory is for getting, replacing, correcting or using an ID card or member/group number. Move a question out if it’s really about:
-updating address, name, contact details or other account info (with no card request) → Account maintenance or correspondence
-other plan documents or forms (benefits booklet, claim form, etc.) → Plan document or form
-whether coverage is active or effective dates → Eligibility
-enrolling, cancelling or changing the plan → Enroll, cancel or change plan
-anything else → its correct subcategory
-Exclude moved questions. Report how many moved and where they went.
-Step 2: for confirmed questions only, record:
-What they wanted: a new or replacement physical card; a digital or temporary card (email, fax, app); their member ID or group number given verbally; a card for a dependent; a correction to a card (wrong name, missing dependent, wrong plan); to understand what’s on the card; other (describe briefly)
-Why they called (the main reason): never received a card after enrolling; lost or damaged card; new plan or plan year; name or dependent change; dentist’s office asked for the card or ID; couldn’t access or use the app or website; didn’t know a digital card was available; other (describe briefly)
-Urgency: whether the caller mentioned an appointment today or soon (yes/no)
-How the agent helped: gave the ID or group number on the call; emailed or faxed a temporary card; ordered a replacement card; directed to the app or website to download it; corrected or updated details; transferred; couldn’t help
-Who called: member, family member, or dentist’s office/provider
-Outcome: resolved on the call, or follow-up needed
-Quality check at the end: re-read 50 random confirmed questions blind and report agreement in chat.
+STEP 0 – PROFILE (report before continuing)
+- Report row count, date range, distinct values in Model, and value counts for: Detection Type, Decision, Adjudicator Decision, CSR Grievance, CSR Grievance2, AI Grievance, AI False-Positive, Adjudicator Grievance, Adjudicator False-Positive, Additional Review.
+- CSR Grievance looks mostly blank and CSR Grievance2 looks like the real CSR flag. Confirm this from the data. If it's unclear, stop and say so.
+- Drop rows where Error is populated, and report how many you dropped.
+- If more than one Model is present, use only <MODEL_FILTER, e.g. azc-e2-nprd-callsum-gpt-6-luna>, and report the counts per model.
 
-Output: ./output/ID_Card_Simple.xlsx, same 4 tabs, exact counts:
+STEP 1 – BUILD THE COHORTS
+- GAP set: AI Grievance = TRUE AND CSR Grievance2 = FALSE AND Adjudicator Decision = "retain".
+- UNCERTAIN set: AI Grievance = TRUE AND CSR Grievance2 = FALSE AND Adjudicator Decision = "uncertain".
+- DISMISSED set: AI Grievance = TRUE AND CSR Grievance2 = FALSE AND Adjudicator Decision = "dismiss". Report counts only.
+- AGREE set: AI Grievance = TRUE AND CSR Grievance2 = TRUE. Use as a contrast sample.
+- Report counts per cohort per Call Date. Expect roughly 60–110 GAP calls per day. Flag it if the numbers are far off.
 
-Summary: the total reviewed; confirmed vs moved out (and where); 5–7 plain-English findings; 2–3 “What this means” bullets, especially which requests self-service could handle (digital card, app download, ID number by voice bot) and what’s stopping callers from using it today.
-Top reasons: Reason | Questions | % | What they wanted most | Resolved on call % | Example
-What they needed: what they wanted, and how the agent helped, with counts and %. Include how often there was an urgent appointment.
-Data to capture: data element | why useful | how often it was identifiable.
+STEP 2 – DE-IDENTIFY
+Before any LLM step, use deterministic Python (regex + NER, e.g. spaCy or Presidio) on Candidate Grievance, Triggering Passage, AI Summary, Evidence, Rationale, and Full Simplified Transcript. Replace names (including spelled-out letters like "E O R B..."), member IDs, phone numbers, addresses/apartment numbers, DOBs, and emails with tags such as [NAME], [MEMBER_ID], [ADDRESS]. Keep CSR / Owning User only as a hashed ID. Spot-check 10 rows and report any leakage.
 
-Rules: same simple style as Find_A_Dentist_Simple.xlsx. Plain tables, plain English, no charts, extra tabs, technical terms or template-like examples. Examples must be real de-identified summaries, with no member ID numbers, group numbers, names, addresses or email addresses.
+STEP 3 – DISCOVER THE PATTERNS (taxonomy)
+Use the de-identified GAP rows. Focus on Candidate Grievance (its last line is a category tag such as "Access"), Reason Code, Criterion, Rationale, and Evidence. Read the transcript only when needed.
+- Derive 6–12 mutually exclusive categories that explain what the caller was complaining about AND why a CSR might not have logged it as a grievance. Examples of the kind of category wanted: "Data/demographic error blocking access", "Frustration voiced during a routine request", "Provider/office complaint relayed by member".
+- For each category, write a one-line definition plus inclusion and exclusion rules.
+- Use "Other" for less than 10% of rows. If Other is larger, refine the categories.
 
-Reply in chat with: the population count, confirmed vs moved-out counts and where they went, the summary bullets, and the blind-recheck agreement.
+STEP 4 – CLASSIFY EVERY GAP CALL
+For each GAP row, output:
+- category (from Step 3)
+- verdict, one of:
+  CSR_MISS: a real complaint about the plan's operations or service that meets the grievance criterion and that the CSR should have logged.
+  AI_OVERFLAG: frustration or a question that does not meet the criterion. Both the AI and the adjudicator were too lenient.
+  MIXED_CALL: a real grievance plus another request. The CSR handled the request and likely missed the grievance.
+  UNCLEAR: not enough evidence.
+- confidence (high / medium / low)
+- a one-sentence justification that quotes no PHI
+Use the Criterion column text as the grievance definition. Do the same classification for the UNCERTAIN set as a separate pass.
+
+STEP 5 – CONTRAST CHECK
+Sample up to 30 AGREE rows. Briefly describe what the calls CSRs do flag have in common, compared with the GAP categories. Example question: do CSRs only log grievances when the caller explicitly says "complaint"?
+
+STEP 6 – DELIVERABLES
+A) grievance_gap_analysis.xlsx, with these sheets:
+   1. Summary: cohort counts per day; GAP count and % by category; verdict counts by category.
+   2. Taxonomy: category, definition, inclusion and exclusion rules.
+   3. GAP_Calls: Case ID, Interaction ID, Call Date, hashed CSR, category, verdict, confidence, justification, Reason Code, Additional Review.
+   4. Uncertain_Calls: same columns as GAP_Calls.
+   5. Data_Notes: assumptions, dropped rows, model filter, de-identification check results.
+B) findings_brief.md, at most one page, for a 30-minute stakeholder meeting:
+   - Headline numbers: total GAP calls and the split across CSR_MISS / AI_OVERFLAG / MIXED.
+   - Top 3–5 patterns, each with its count, %, and 1–2 de-identified example evidence lines.
+   - Recommendations, split into: (a) prompt or adjudicator changes for over-flag patterns, (b) CSR training or process changes for miss patterns, (c) open questions for the business owner.
+   - Caveats: sample size, number of days covered, LLM-judged verdicts not yet validated by a human.
+
+RULES
+- Compute all numbers in code. Do not estimate any counts.
+- Never put PHI in the outputs.
+- If an assumption about a column's meaning affects the results, state it in Data_Notes and in the brief.
+- Stop and ask if CSR Grievance2 or Adjudicator Decision values don't match what's described above.
