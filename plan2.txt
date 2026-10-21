@@ -1,5 +1,6 @@
-Step 2: before Step 3, run an independent name-leak check, since the rule-based PERSON detection can't validate itself:
-1. Try `pip install` of en_core_web_sm (or en_core_web_lg). If it installs, re-run NER on the de-identified text and report any PERSON entities found.
-2. Regardless: list every capitalized token remaining in de-identified text that is not a sentence-start word, a known plan/product/medical term, or a tag, with counts only (no context). Also flag tokens right after "this is", "my name is", "speaking with", "Mr./Ms./Mrs.", "Dr.".
-3. Write 5 random de-identified GAP rows (Candidate Grievance, AI Summary, Evidence, first 15 transcript turns) to a local file deid_review_sample.txt for me to eyeball. Do not print them in chat.
-Report results and wait for my OK before Step 3.
+Revisions to deliverables:
+1. In findings_brief.md, replace quoted "Example evidence" with either real de-identified excerpts from the Evidence field (≤20 words, verify no [NAME?]/PHI) or clearly label them "paraphrased".
+2. Fix caveat: 13 unadjudicated CSR-negative rows (14 total incl. 1 CSR-flagged).
+3. Add a caveat: verdicts were derived from adjudicator rationale/evidence, which already argue for grievance, so AI_OVERFLAG is likely undercounted and CSR_MISS vs MIXED_CALL is a hypothesis pending human review. Reframe headline to lead with categories and the "complaint embedded in another task" pattern.
+4. Make CSR-training recommendations conditional on validation.
+5. Create a Validation_Sample sheet: 2 GAP rows per category (all rows if fewer), stratified by verdict, with Case ID, category, verdict, justification, and blank columns "Reviewer verdict" and "Reviewer notes" for human review in the secure environment.
