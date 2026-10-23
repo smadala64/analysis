@@ -1,88 +1,16 @@
-ROLE
-You are a data analyst on a healthcare call-center AI project. The data contains PHI/PII. Process it only in this approved environment. Never send raw names, member IDs, addresses, phone numbers, or DOBs to any external service. Compute every number in code; never estimate.
+Deep-dive on two categories, using the existing de-identified monthly data and category labels. Same PHI rules apply.
 
-BUSINESS PROBLEM
-Customer service representatives (CSRs) log grievances (complaints about the plan or its providers, per CMS criteria). A production AI also reads every call and flags candidate grievances. A second-stage AI adjudicator then reviews each AI flag and marks it retain, dismiss, or uncertain, applying the same CMS criteria. The production AI flags roughly 10x more grievances than CSRs log. Leadership wants to understand why: is AI over-detecting, are CSRs under-detecting, or both?
+1. Provider access / network: AI=217, retained=165, CSR=65.
+2. Plan customer service / communications: AI=204, retained=158, CSR=57.
 
-THREE DETECTION SETS (label every result with which comparison it answers)
-- CSR: CSR Grievance2 = TRUE (CSR Grievance is a free-text note; nonblank note = CSR flagged)
-- PROD-AI: AI Grievance = TRUE (Candidate Grievance holds the AI's text)
-- ADJUDICATOR: Adjudicator Decision in {retain, dismiss, uncertain}
-Comparisons: (1) CSR vs PROD-AI, (2) CSR vs ADJUDICATOR-RETAINED, (3) PROD-AI vs ADJUDICATOR.
-Define RETAINED as Adjudicator Decision = retain. Report "uncertain" separately everywhere; never fold it into retained unless a result explicitly says "retain+uncertain".
+For each category, compare the retained calls the CSR did NOT log (GAP) with the retained calls the CSR DID log (AGREE):
+a. Sub-types: e.g. for provider access, not accepting new patients, no provider nearby, long wait, specialist unavailable, provider left network, other. Derive suitable sub-types for plan customer service. Give counts and % for each group.
+b. % with explicit complaint language, % where the caller expressed dissatisfaction vs. only asked for help, % where the CSR resolved the issue during the call.
+c. 5 de-identified example Evidence excerpts (≤20 words) from the GAP group.
+d. Conclusion: are these real grievances CSRs treat as routine requests, or is the AI/adjudicator counting routine requests as grievances?
 
-INPUT
-Excel file: <PATH_TO_FILE>, one row per AI detection, one month of calls. Expected columns:
-Case ID, Transcript ID, Interaction ID, Call Date, CSR / Owning User, Detection ID, Detection Type, Candidate Grievance, Triggering Passage, AI Summary, Full Simplified Transcript, Decision, Reason Code, Evidence, Criterion, Rationale, Additional Review, CSR Grievance, Model, Response ID, Processed At, Request Seconds, Error, CSR Grievance2, AI Grievance, Adjudicator Decision, AI False-Positive, Adjudicator Grievance, Adjudicator False-Positive
-If columns differ, stop and report the differences before continuing.
-
-STEP 0 – PROFILE AND VALIDATE (report, then wait for my OK)
-- Row count, date range, calls per day, rows per Interaction ID (flag duplicates).
-- Value counts: Model, Detection Type, Decision, Adjudicator Decision, CSR Grievance2, AI Grievance, Additional Review, Error (blank vs populated).
-- Drop any aggregate/footer rows. Keep Error rows as a separate "UNADJUDICATED" cohort; exclude them from categorization.
-- If more than one Model is present, use only <MODEL_FILTER> for the main analysis and report counts per model. If the same day exists under two models, note it; a model-vs-model comparison is an optional extra at the end.
-- Confirm CSR Grievance2 is the usable CSR flag (every TRUE should have a nonblank CSR Grievance note).
-
-STEP 1 – COHORTS
-For every adjudicated row: CSR flag (T/F) × Adjudicator Decision. Build:
-- AGREE: AI=T, CSR=T, retain
-- GAP: AI=T, CSR=F, retain
-- UNCERTAIN_CSR_F / UNCERTAIN_CSR_T
-- DISMISSED_CSR_F / DISMISSED_CSR_T
-- UNADJUDICATED (Error rows), split by CSR flag
-Report a full crosstab for the month and per week. Confirm the row totals reconcile before moving on.
-
-STEP 2 – DE-IDENTIFY
-Before any LLM step, de-identify Candidate Grievance, Triggering Passage, AI Summary, Evidence, Rationale, CSR Grievance notes, and Full Simplified Transcript with deterministic local code: regex for member/record IDs, phone numbers, emails, DOBs, dates of birth, street addresses/apartment numbers, ZIPs; NER for person names if a local model is available; plus a dictionary mask: any capitalized token whose lowercase form is not in /usr/share/dict/words (and is not a tag or a known plan/product/medical term) becomes [NAME?]. Replace CSR / Owning User with an HMAC pseudonym. Write 5 random de-identified rows (the fields that will go to the LLM) to deid_review_sample.txt for my review. Do not print PHI in chat. Wait for my OK before Step 3.
-LLM input in later steps is limited to: pseudonymized Case ID, Candidate Grievance, Triggering Passage, Reason Code, Criterion, Rationale, Evidence, Additional Review, CSR Grievance note (de-identified). Send Full Simplified Transcript only when a row cannot be classified without it, and only de-identified.
-
-STEP 3 – BUILD ONE CATEGORY LIST FROM THE WHOLE MONTH
-- Sample ~150 rows stratified across AGREE, GAP, DISMISSED, UNCERTAIN (and across weeks). From the sample, derive 6–12 mutually exclusive grievance categories describing WHAT the caller complained about (e.g. provider office conduct, cannot find in-network provider, plan phone/agent service, treatment quality, account/enrollment/ID card, claims/authorization handling). Each category gets a one-line definition plus inclusion and exclusion rules. "Other" must be <10%; refine if larger.
-- Classify EVERY adjudicated row (all cohorts) into the list. Also record for each row: a plain-language "complaint sub-type" (short phrase) and whether the complaint was the main purpose of the call or raised in passing during another request (MAIN / IN_PASSING / UNCLEAR).
-
-STEP 4 – ANSWER THE CORE QUESTION: TYPE OF COMPLAINT, OR WAY IT IS SAID?
-A. Category comparison (comparisons 1 and 2). Per category: PROD-AI count, RETAINED count, CSR count, CSR capture rate vs PROD-AI, CSR capture rate vs RETAINED, dismiss rate. Rank categories by CSR capture rate. State clearly whether CSRs concentrate on certain categories or log evenly across them, with a chi-square or equivalent test and a note on sample size.
-B. Language comparison (local Python only, no LLM). In de-identified transcripts, count calls containing explicit complaint language: complaint, grievance, file a complaint, formal, supervisor, manager, escalate, report, unacceptable, not happy, upset, frustrated, dissatisfied, and variants. Compare the % of calls per term across AGREE vs GAP vs DISMISSED. Also compare MAIN vs IN_PASSING rates across AGREE vs GAP. Run a simple logistic regression or equivalent: does explicit complaint language predict CSR logging after controlling for category?
-C. Within AGREE, summarize what CSR notes have in common (phrasing, whether the caller asked to file a complaint, whether the CSR states it will be logged).
-Conclusion for this step, in one paragraph: the gap is mainly explained by (i) category, (ii) explicit language, (iii) complaint raised in passing, or (iv) something else, with the supporting numbers.
-
-STEP 5 – PRODUCTION AI VS ADJUDICATOR (comparison 3)
-- Dismiss rate overall, per week, per category. Summarize Reason Code and Rationale for dismissals: what kinds of AI flags does the adjudicator reject, with counts.
-- For the CSR-flagged rows the adjudicator dismissed or marked uncertain: list them (de-identified) with the adjudicator's reason. These are possible adjudicator misses.
-
-STEP 6 – OPEN-ENDED DISCOVERY
-Independently of the steps above, examine the de-identified data and propose up to 5 hypotheses for why CSRs log fewer grievances than AI that we have not considered (examples only: call length, where in the call the complaint appears, issue resolved during the call, specific CSRs or days, caller type, repeat callers, calls with multiple issues). Test each with counts or rates where the data allows. Report each as SUPPORTED / NOT SUPPORTED / UNTESTABLE with the evidence. Flag any per-CSR findings as sensitive; report them by pseudonym only.
-
-STEP 7 – DELIVERABLES
-1. grievance_analysis_<month>.xlsx with sheets:
-   - Summary: monthly funnel (PROD-AI flags → unadjudicated / dismissed / uncertain / retained, each split by CSR flag), weekly trend table, headline answers.
-   - Taxonomy: category, definition, inclusion/exclusion rules, example sub-types.
-   - Category_Comparison: the Step 4A table.
-   - Language_Comparison: the Step 4B tables.
-   - Dismissed_Analysis: Step 5 tables.
-   - Hypotheses: Step 6 results.
-   - All_Calls: one row per detection with pseudonymized IDs, Call Date, week, CSR pseudonym, cohort, category, sub-type, MAIN/IN_PASSING, Adjudicator Decision, Reason Code, Additional Review, explicit-language flags.
-   - Validation_Sample: 3 rows per category per cohort (AGREE/GAP/DISMISSED), with blank "Reviewer verdict" and "Reviewer notes" columns.
-   - Data_Notes: assumptions, dropped rows, model filter, de-identification results, caveats.
-2. charts/ folder with PNGs (matplotlib, clear titles, labeled axes, counts and % shown):
-   - funnel.png: PROD-AI → adjudicator outcomes → CSR flagged
-   - weekly_trend.png: PROD-AI flags, retained, CSR flags per week
-   - category_capture.png: per category, PROD-AI vs RETAINED vs CSR counts, with CSR capture rate labeled
-   - language_comparison.png: % of calls with explicit complaint language, AGREE vs GAP vs DISMISSED
-   - main_vs_passing.png: MAIN vs IN_PASSING share, AGREE vs GAP
-   - dismissal_reasons.png: dismissal reason counts
-3. findings_brief.md (max 2 pages) for stakeholders, embedding the charts:
-   - One-paragraph answer to "why do CSRs log fewer grievances than AI?"
-   - Headline numbers and funnel
-   - Category comparison with the chart and 2–3 sentences
-   - Language / in-passing finding with the chart
-   - What the adjudicator rejects
-   - Discovery hypotheses, one line each
-   - Recommendations, split into: prompt/adjudicator changes, CSR process/training, questions for the business owner
-   - Caveats: LLM-judged categories not yet human-validated, model used, any data gaps
-4. One-slide summary as summary_slide.png: funnel + the single most important chart + three bullet takeaways.
-
-RULES
-- Every chart and table states which comparison it answers (CSR vs PROD-AI, CSR vs RETAINED, PROD-AI vs ADJUDICATOR).
-- No PHI in any output. Use real de-identified excerpts (≤20 words) for examples, or label them "paraphrased".
-- Pause for my OK after Step 0 and after Step 2. Otherwise proceed and report progress at each step.
+Deliverables:
+- New sheet "Category_DeepDive" in the existing workbook.
+- One chart per category: GAP vs AGREE by sub-type (deepdive_provider_access.png, deepdive_plan_service.png).
+- A short section in findings_brief.md: start with a 3-sentence plain-English summary with no statistics, then the details.
+- State any data limitations next to each conclusion.
