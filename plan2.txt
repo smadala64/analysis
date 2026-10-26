@@ -1,16 +1,27 @@
-Deep-dive on two categories, using the existing de-identified monthly data and category labels. Same PHI rules apply.
+Next step on the grievance gap analysis (Medicare, Aug 7 – Sep 10). Category doesn’t explain the gap, so drop that angle. Focus on caller trigger words and on what the AI saw that the CSR didn’t. Work only from the de-identified clean transcripts, read each call yourself (no keyword-only rules), and use the same privacy rules as before.
 
-1. Provider access / network: AI=217, retained=165, CSR=65.
-2. Plan customer service / communications: AI=204, retained=158, CSR=57.
+1. Trigger words in CSR-documented grievances (the 248 retained detections the CSR documented, plus any other CSR-flagged calls):
+For each call, record the exact caller trigger word or phrase that most likely led the CSR to log it (e.g. “I want to file a complaint”, “let me talk to a supervisor”, “this is unacceptable”). Confirm it was spoken by the caller, not the representative. If no explicit trigger phrase exists, write “none – implicit”.
+Then build a trigger-phrase list: the phrases or phrase types with how many CSR-documented calls contain each.
 
-For each category, compare the retained calls the CSR did NOT log (GAP) with the retained calls the CSR DID log (AGREE):
-a. Sub-types: e.g. for provider access, not accepting new patients, no provider nearby, long wait, specialist unavailable, provider left network, other. Derive suitable sub-types for plan customer service. Give counts and % for each group.
-b. % with explicit complaint language, % where the caller expressed dissatisfaction vs. only asked for help, % where the CSR resolved the issue during the call.
-c. 5 de-identified example Evidence excerpts (≤20 words) from the GAP group.
-d. Conclusion: are these real grievances CSRs treat as routine requests, or is the AI/adjudicator counting routine requests as grievances?
+2. The gap calls (the 385 retained AI detections with no CSR flag):
+For each call, record:
 
-Deliverables:
-- New sheet "Category_DeepDive" in the existing workbook.
-- One chart per category: GAP vs AGREE by sub-type (deepdive_provider_access.png, deepdive_plan_service.png).
-- A short section in findings_brief.md: start with a 3-sentence plain-English summary with no statistics, then the details.
-- State any data limitations next to each conclusion.
+Caller used a trigger phrase? (yes/no). If yes, the exact phrase, and which type from the list in step 1 it matches.
+What the AI saw: the specific caller phrase or situation that makes it a grievance (e.g. repeated unresolved issue, expressed dissatisfaction with a denial, threatened to leave the plan), in one plain sentence.
+Grievance type (existing category, for reference only).
+Your confidence that it meets the grievance definition: high / medium / low, with a one-line reason.
+
+3. Adjudicator-dismissed calls (the ~35 the CSR marked as grievances but the adjudicator dismissed):
+Record the trigger phrase, a one-line summary of the complaint, and whether it looks like a grievance under the definition, with a reason.
+
+4. Output: ./output/Grievance_Gap_Review.xlsx, plain tables, plain English:
+
+Summary: key numbers, and 4–5 findings in plain English. Include: how many gap calls contained a CSR-style trigger phrase (likely misses) vs how many had none (implicit grievances), and the most common trigger phrases.
+Trigger phrases: phrase type | example wording | # CSR-documented calls | # gap calls containing it
+Gap calls – for review: call_no | trigger phrase used (yes/no) | exact phrase | what the AI saw | grievance type | confidence | 2–3 sentence de-identified summary | Linda’s decision (blank) | Linda’s notes (blank). Sort with trigger-phrase calls first, then high-confidence ones.
+CSR-documented calls: call_no | trigger phrase | grievance type
+Adjudicator-dismissed calls: call_no | trigger phrase | summary | looks like a grievance? | reason
+Notes: method, date range (Medicare, Aug 7 – Sep 10), de-identification
+
+Reply in chat with: the count of gap calls with vs without trigger phrases, the top 5 trigger phrases, and any patterns in what the AI catches that CSRs don’t.
