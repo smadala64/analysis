@@ -1,8 +1,6 @@
-Go ahead in batches. A few points:
+The style is good. Continue with the gap batch (385) in batches of 50. Two small additions:
 
-Order: (a) the 35 adjudicator-dismissed calls, (b) the 385 gap calls, (c) the remaining 276 CSR-flagged calls. The gap calls are the priority.
-Batch size: about 50 calls per batch, saving to the workbook and checkpointing after each batch so the work can resume.
-Pause after the first batch (the 35 dismissed calls) and show me 5 example rows (trigger phrase, what the AI saw, confidence, summary). I’ll confirm the style before you continue.
-Trigger phrases: for every call, record the exact caller wording as you go. Build the trigger-phrase list and match the gap calls against it at the end, once all CSR-flagged calls are done.
-Only count phrases spoken by the caller, not the representative.
-After the gap calls are done, send me an interim summary: how many gap calls had a trigger phrase vs none, and the most common phrases. Then continue with the rest.
+Add a column “Caller used a trigger phrase (yes/no)” for the gap calls, so it’s easy to filter likely CSR misses.
+When the assessment is “No” or “Borderline”, add a short reason type: benefits/coverage question, appeal of a decision, information only, not supported by the transcript, or other. You already grouped the 35 this way (32 benefits/appeals, 2 unsupported, 1 information only); keep using it.
+
+Also confirm that the call_no values in the workbook map correctly. Your notes mentioned a possible C0014/C0016 mix-up. After the gap batches, send me the interim summary as planned.
