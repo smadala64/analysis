@@ -1,27 +1,8 @@
-Next step on the grievance gap analysis (Medicare, Aug 7 – Sep 10). Category doesn’t explain the gap, so drop that angle. Focus on caller trigger words and on what the AI saw that the CSR didn’t. Work only from the de-identified clean transcripts, read each call yourself (no keyword-only rules), and use the same privacy rules as before.
+Go ahead in batches. A few points:
 
-1. Trigger words in CSR-documented grievances (the 248 retained detections the CSR documented, plus any other CSR-flagged calls):
-For each call, record the exact caller trigger word or phrase that most likely led the CSR to log it (e.g. “I want to file a complaint”, “let me talk to a supervisor”, “this is unacceptable”). Confirm it was spoken by the caller, not the representative. If no explicit trigger phrase exists, write “none – implicit”.
-Then build a trigger-phrase list: the phrases or phrase types with how many CSR-documented calls contain each.
-
-2. The gap calls (the 385 retained AI detections with no CSR flag):
-For each call, record:
-
-Caller used a trigger phrase? (yes/no). If yes, the exact phrase, and which type from the list in step 1 it matches.
-What the AI saw: the specific caller phrase or situation that makes it a grievance (e.g. repeated unresolved issue, expressed dissatisfaction with a denial, threatened to leave the plan), in one plain sentence.
-Grievance type (existing category, for reference only).
-Your confidence that it meets the grievance definition: high / medium / low, with a one-line reason.
-
-3. Adjudicator-dismissed calls (the ~35 the CSR marked as grievances but the adjudicator dismissed):
-Record the trigger phrase, a one-line summary of the complaint, and whether it looks like a grievance under the definition, with a reason.
-
-4. Output: ./output/Grievance_Gap_Review.xlsx, plain tables, plain English:
-
-Summary: key numbers, and 4–5 findings in plain English. Include: how many gap calls contained a CSR-style trigger phrase (likely misses) vs how many had none (implicit grievances), and the most common trigger phrases.
-Trigger phrases: phrase type | example wording | # CSR-documented calls | # gap calls containing it
-Gap calls – for review: call_no | trigger phrase used (yes/no) | exact phrase | what the AI saw | grievance type | confidence | 2–3 sentence de-identified summary | Linda’s decision (blank) | Linda’s notes (blank). Sort with trigger-phrase calls first, then high-confidence ones.
-CSR-documented calls: call_no | trigger phrase | grievance type
-Adjudicator-dismissed calls: call_no | trigger phrase | summary | looks like a grievance? | reason
-Notes: method, date range (Medicare, Aug 7 – Sep 10), de-identification
-
-Reply in chat with: the count of gap calls with vs without trigger phrases, the top 5 trigger phrases, and any patterns in what the AI catches that CSRs don’t.
+Order: (a) the 35 adjudicator-dismissed calls, (b) the 385 gap calls, (c) the remaining 276 CSR-flagged calls. The gap calls are the priority.
+Batch size: about 50 calls per batch, saving to the workbook and checkpointing after each batch so the work can resume.
+Pause after the first batch (the 35 dismissed calls) and show me 5 example rows (trigger phrase, what the AI saw, confidence, summary). I’ll confirm the style before you continue.
+Trigger phrases: for every call, record the exact caller wording as you go. Build the trigger-phrase list and match the gap calls against it at the end, once all CSR-flagged calls are done.
+Only count phrases spoken by the caller, not the representative.
+After the gap calls are done, send me an interim summary: how many gap calls had a trigger phrase vs none, and the most common phrases. Then continue with the rest.
