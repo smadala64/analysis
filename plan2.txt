@@ -1,6 +1,22 @@
-The style is good. Continue with the gap batch (385) in batches of 50. Two small additions:
+Prompt for the agent (one-pager + false-positive patterns)
 
-Add a column “Caller used a trigger phrase (yes/no)” for the gap calls, so it’s easy to filter likely CSR misses.
-When the assessment is “No” or “Borderline”, add a short reason type: benefits/coverage question, appeal of a decision, information only, not supported by the transcript, or other. You already grouped the 35 this way (32 benefits/appeals, 2 unsupported, 1 information only); keep using it.
+Two things for tomorrow’s meeting.
 
-Also confirm that the call_no values in the workbook map correctly. Your notes mentioned a possible C0014/C0016 mix-up. After the gap batches, send me the interim summary as planned.
+Part 1: false-positive patterns (the main goal). My manager wants to understand where the AI flags a grievance but a human decides it isn’t one, so we can adjust the detection prompt.
+
+Confirm: are the ~354 detections that weren’t retained (987 total − 633 retained) the ones the adjudicator rejected? If so, those are the false-positive set.
+Read each rejected detection (full call, no keyword rules) and record: what the AI flagged (one sentence), and the most likely reason it isn’t a grievance. Use reason types such as: coverage/benefit decision (appeal, not grievance); information request with mild frustration; complaint about a third party not covered by the plan; dissatisfaction already resolved on the call; complaint not actually present in this call; representative’s words, not the caller’s; other (describe).
+Add the 32 benefit/appeal cases from the 35 dismissed CSR calls as supporting evidence.
+Summarise: the top false-positive patterns with counts and 1–2 de-identified examples each, and for each pattern a suggested prompt rule (one sentence) that would stop the AI flagging it.
+
+Part 2: one-page summary (Grievance_OnePager.md, also as a one-page PDF), plain English, for the meeting:
+
+What we did: one month of Medicare calls (Aug 7 – Sep 10); compared AI detections, CSR flags and adjudicator decisions.
+Key numbers: AI detections, retained, CSR-flagged, gap (AI yes, CSR no), adjudicator-rejected.
+Finding 1, CSR behaviour: how often explicit escalation words (“complaint”, “supervisor”) actually appear in CSR-flagged vs gap calls (use only the narrow Direct complaint/escalation type, not general dissatisfaction). Say plainly whether the keyword theory holds.
+Finding 2, gap calls: most contain clear caller dissatisfaction, and a first review suggests most may meet the grievance definition. Needs confirmation by the grievance team (Linda).
+Finding 3, AI false positives: the top patterns from Part 1 with counts.
+Suggested prompt changes: 3–5 one-line rules.
+Next steps: Linda reviews a sample of gap calls (suggest 50: 25 high-confidence and 25 borderline) and a sample of false-positive cases to confirm the patterns.
+
+Keep it to one page. No jargon, no row-vs-interaction caveats. Use unique-call counts where possible and mention once that some calls had more than one detection.
