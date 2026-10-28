@@ -1,22 +1,52 @@
-Prompt for the agent (one-pager + false-positive patterns)
+ROLE
+You are a senior product engineer building a clickable low-fidelity prototype for a stakeholder meeting with a UI team. The point is to give people something concrete to react to, so they validate structure, metadata, actions and workflow instead of answering "what do you want?". Visual polish is not the goal.
 
-Two things for tomorrow’s meeting.
+INPUTS (attached)
+1. report-concierge-content-management-spec.md: functional spec for the Report Concierge admin content-management feature. Treat it as the source of truth for screens, lifecycle and behavior.
+2. schema_dump (Excel): Oracle schema MW_AI_VECTORDB_REPORT_CHATBOT. Columns: SCHEMA_NAME, TABLE_NAME, COLUMN_POSITION, COLUMN_NAME, DATA_TYPE, DATA_LENGTH, DATA_PRECISION, DATA_SCALE, NULLABLE, DATA_DEFAULT.
 
-Part 1: false-positive patterns (the main goal). My manager wants to understand where the AI flags a grievance but a human decides it isn’t one, so we can adjust the detection prompt.
+STEP 1: ANALYZE BEFORE BUILDING
+Read both inputs completely. Then write a short analysis (markdown, max 1 page) with:
+a) Table grouping: which tables back Reports, Knowledge Base, SAS/AI ingestion, AI quality checks, search/embeddings, bulk ingestion, and chat. Mark the chat tables out of scope (spec §19).
+b) Field mapping: for every field the spec requires (Report Catalog §4.1, editable fields §7, KB fields §12, audit §15), give the TABLE.COLUMN that supports it, or mark it "NOT IN SCHEMA".
+c) Lifecycle check: can the current schema represent Draft → Review → Published → Archived for both Reports and KB entries? For manually created reports too? Can it support "editing a published report creates a working draft"? Say exactly where the status lives.
+d) Gaps and risks: missing columns or tables, JSON fields that should be relationships, and anything that makes a spec requirement impossible today.
+Do not invent columns. If something is ambiguous, say so.
 
-Confirm: are the ~354 detections that weren’t retained (987 total − 633 retained) the ones the adjudicator rejected? If so, those are the false-positive set.
-Read each rejected detection (full call, no keyword rules) and record: what the AI flagged (one sentence), and the most likely reason it isn’t a grievance. Use reason types such as: coverage/benefit decision (appeal, not grievance); information request with mild frustration; complaint about a third party not covered by the plan; dissatisfaction already resolved on the call; complaint not actually present in this call; representative’s words, not the caller’s; other (describe).
-Add the 32 benefit/appeal cases from the 35 dismissed CSR calls as supporting evidence.
-Summarise: the top false-positive patterns with counts and 1–2 de-identified examples each, and for each pattern a suggested prompt rule (one sentence) that would stop the AI flagging it.
+STEP 2: BUILD THE PROTOTYPE
+Deliver ONE self-contained HTML file (inline CSS and JS, no build step, no backend). It must open by double-clicking. Use realistic mock data for a dental insurer (about 8 reports, about 6 KB entries) and label the page "Prototype · mock data". Use plain JS or a CDN-loaded framework only.
 
-Part 2: one-page summary (Grievance_OnePager.md, also as a one-page PDF), plain English, for the meeting:
+Layout: top bar plus left nav (Report Catalog, Knowledge Base, Add report). Report Catalog is the default landing page (spec §3). SAS ingestion must NOT be the landing page.
 
-What we did: one month of Medicare calls (Aug 7 – Sep 10); compared AI detections, CSR flags and adjudicator decisions.
-Key numbers: AI detections, retained, CSR-flagged, gap (AI yes, CSR no), adjudicator-rejected.
-Finding 1, CSR behaviour: how often explicit escalation words (“complaint”, “supervisor”) actually appear in CSR-flagged vs gap calls (use only the narrow Direct complaint/escalation type, not general dissatisfaction). Say plainly whether the keyword theory holds.
-Finding 2, gap calls: most contain clear caller dissatisfaction, and a first review suggests most may meet the grievance definition. Needs confirmation by the grievance team (Linda).
-Finding 3, AI false positives: the top patterns from Part 1 with counts.
-Suggested prompt changes: 3–5 one-line rules.
-Next steps: Linda reviews a sample of gap calls (suggest 50: 25 high-confidence and 25 borderline) and a sample of false-positive cases to confirm the patterns.
+Screens and behavior (all clickable, state kept in memory):
+1. Report Catalog: table with name/code, status chip, source type, domain, owner, last modified/by, published date, search/index status. Search box. Filters for status, source and owner. Status count tiles. Pagination controls. Clicking a row opens the detail page.
+2. Add Report: three options (spec §6): AI-assisted SAS import, manual creation, bulk SAS import (if the schema supports batches). Every path creates a DRAFT.
+3. AI review screen: AI-proposed metadata (name, description, purpose, parameters, tables, outputs, domain, keywords), each with a confidence level and Accept/Edit. Show the AI quality-check result and validation warnings (possible duplicate, partial extraction) if the schema stores them. "Save as Draft" only; there is never a direct publish.
+4. Report detail with tabs: Overview (editable metadata form), Inputs & parameters, Outputs & fields (include sensitivity if the schema has it), Search & index (sync status, last rebuilt, chunk counts, a retry action for failed or stale indexing), History (audit trail).
+   - Actions depend on status:
+     - Draft: Submit for review, Archive, Delete.
+     - In Review: Publish, Return to draft.
+     - Published: Edit as working draft, Unpublish, Archive. With a working draft open: Publish changes, Discard draft.
+     - Archived: Restore as draft.
+   - Published and Archived records are read-only unless a working draft is open.
+5. Publish, Unpublish and Archive each open a confirmation dialog that lists the steps from spec §8, §9 and §10. Publish is BLOCKED with a clear message if required fields are missing. Archiving a report that KB entries link to shows a warning.
+6. Knowledge Base list and detail: same lifecycle and actions as reports, with linked reports shown. Flag any entry that links to an archived report.
+7. Toast confirmations for every action.
 
-Keep it to one page. No jargon, no row-vs-interaction caveats. Use unique-call counts where possible and mention once that some calls had more than one detection.
+Schema traceability (important): add a toggle "Show schema mapping". When it's on, each field label and table header shows its source TABLE.COLUMN in small monospace text. Any field the spec requires but the schema lacks gets a visible "not in schema" badge. When it's off, the UI looks clean for demos.
+
+Seed the mock data with these edge cases from spec §17 so they're visible in the demo:
+- a published report whose index update failed
+- a published report with a stale index and a working draft
+- a draft missing a required field, so publish is blocked
+- an archived report still referenced by a KB entry
+- an AI import flagged as a possible duplicate
+
+Quality bar: works at 1280px and down to tablet width, real <button>/<input>/<label> elements, readable contrast, status shown by text as well as color, no lorem ipsum, no browser alert()/confirm() dialogs.
+
+STEP 3: DELIVERABLES
+1. analysis.md: Step 1 output.
+2. prototype.html: the working prototype.
+3. meeting-questions.md: 6–10 decisions the stakeholders must make. Cover roles and permissions, edit-in-place vs working draft, delete vs archive-only, duplicate detection, bulk import in MVP, whether admins see AI scores, and which existing component library or design system to use. Tie each question to the spec section or schema gap that raises it.
+
+Before finishing, click through every flow yourself: add report (all three paths) → review → publish → unpublish → archive → restore, plus the KB equivalents. Fix anything broken.
