@@ -41,7 +41,7 @@ main{flex:999 1 560px;min-width:0;padding:24px 28px 48px}
 textarea.inp{min-height:84px;resize:vertical}
 .card{background:#fff;border:1px solid #DDE1E6;border-radius:12px}
 .scroll{overflow-x:auto}
-.tbl{width:100%;border-collapse:collapse;min-width:980px}
+.tbl{width:100%;border-collapse:collapse;min-width:1180px}
 .tbl th{text-align:left;font-size:12px;font-weight:600;color:#5F6873;text-transform:uppercase;letter-spacing:.04em;padding:10px 14px;border-bottom:1px solid #DDE1E6;background:#FAFBFC;vertical-align:bottom}
 .tbl td{padding:12px 14px;border-bottom:1px solid #EDF0F2;vertical-align:middle}
 .tbl tr.row{cursor:pointer}.tbl tr.row:hover td{background:#F7F9FA}
@@ -76,6 +76,7 @@ textarea.inp{min-height:84px;resize:vertical}
 var TODAY='10/28/2026';
 var S={
   screen:'catalog',showSchema:true,query:'',fStatus:'All',fSource:'All',rid:'R-1042',tab:'overview',kid:'HT-201',kbF:'All',
+  fDate:'any',sort:'mod-desc',kbTab:'content',aiVals:{},aiEdit:null,bulkDone:false,
   addMode:'sas',aiAcc:{},modal:null,toast:null,m:{name:'',platform:'',domain:'',location:'',desc:''},
   reports:[
     {id:'R-1042',name:'Claims Paid by Provider — Monthly',code:'CLM_PAID_PROV_M.sas',platform:'SAS',source:'SAS',domain:'Claims',program:'Claims Ops',status:'Published',modified:'10/21/2026',by:'jramirez',published:'10/21/2026',search:'In sync',rebuilt:'10/21 9:14 AM',chunks:14,desc:'Monthly paid claims and amounts by billing provider, with line-of-business split.',purpose:'Provider relations uses it to review payment volumes and spot outliers before quarterly meetings.',location:'SAS EG › Claims › Monthly',keywords:'paid claims, provider payments, NPI',aliases:'Provider paid report, CPP monthly',users:'Provider Relations, Claims Ops',ai:true},
@@ -136,6 +137,8 @@ var K_DEFS=[
   {k:'owner',label:'Owner',gap:1}
 ];
 
+function pd(s){var p=String(s).split('/');return new Date(+p[2],+p[0]-1,+p[1]);}
+function legend(){return S.showSchema?'<div class="row-flex" style="gap:8px 16px;font-size:12px;color:#3A424D"><span><span class="mono" style="color:#6B5B9A">TABLE.COLUMN</span> = likely matching column in schema_dump (candidate, confirm with data team)</span><span><span class="gap">not in schema</span> = no named column for this concept today</span><span class="muted">Toggle “Show schema mapping” off for a clean demo.</span></div>':'';}
 function e(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function stCls(s){return 'chip '+({'Draft':'st-draft','In Review':'st-review','Published':'st-pub','Archived':'st-arch'}[s]||'st-arch');}
 function srCls(s){return ({'In sync':'sr-ok','Stale':'sr-warn','Index failed':'sr-err'}[s]||'sr-mute');}
@@ -175,26 +178,43 @@ function vNav(){
 
 function vCatalog(){
   var q=S.query.trim().toLowerCase();
+  var now=pd(TODAY);
+  var age=function(r){return (now-pd(r.modified))/864e5;};
   var rows=S.reports.filter(function(r){
-    return (S.fStatus==='All'||r.status===S.fStatus)&&(S.fSource==='All'||r.source===S.fSource)&&(!q||(r.name+' '+r.code+' '+r.keywords).toLowerCase().indexOf(q)>=0);
+    var a=age(r),dOk=S.fDate==='any'||(S.fDate==='7'&&a<=7)||(S.fDate==='30'&&a<=30)||(S.fDate==='older'&&a>30);
+    return dOk&&(S.fStatus==='All'||r.status===S.fStatus)&&(S.fSource==='All'||r.source===S.fSource)&&(!q||(r.name+' '+r.code+' '+r.keywords+' '+r.desc).toLowerCase().indexOf(q)>=0);
   });
+  var ORDER={'Draft':0,'In Review':1,'Published':2,'Archived':3};
+  rows.sort(function(a,b){
+    if(S.sort==='mod-asc')return pd(a.modified)-pd(b.modified);
+    if(S.sort==='name')return a.name.localeCompare(b.name);
+    if(S.sort==='status')return ORDER[a.status]-ORDER[b.status]||a.name.localeCompare(b.name);
+    return pd(b.modified)-pd(a.modified);
+  });
+  var sel=function(field,cur,opts){return '<select class="inp" style="width:auto;min-width:150px" data-field="'+field+'">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===cur?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';};
+  var DATE_LBL={'7':'Last 7 days','30':'Last 30 days','older':'Older than 30 days'};
   var tiles=['Draft','In Review','Published','Archived'].map(function(s){
-    return '<button class="optcard" style="padding:14px 16px;gap:2px" data-act="fStatus" data-arg="'+s+'"><span class="'+stCls(s)+'" style="width:max-content">'+s+'</span><span style="font-size:26px;font-weight:600">'+S.reports.filter(function(r){return r.status===s;}).length+'</span></button>';
+    return '<button class="'+(S.fStatus===s?'optcard on':'optcard')+'" style="padding:14px 16px;gap:2px" data-act="tile" data-arg="'+s+'" title="Show only '+s+' reports"><span class="'+stCls(s)+'" style="width:max-content">'+s+'</span><span style="font-size:26px;font-weight:600">'+S.reports.filter(function(r){return r.status===s;}).length+'</span></button>';
   }).join('');
   var sf=['All','Draft','In Review','Published','Archived'].map(function(s){return btn(s,s===S.fStatus?'fchip on':'fchip','fStatus',s);}).join('');
   var srcf=['All','SAS','Manual','Other'].map(function(s){return btn(s,s===S.fSource?'fchip on':'fchip','fSource',s);}).join('');
   var body=rows.map(function(r){
     return '<tr class="row" data-act="openReport" data-arg="'+r.id+'"><td><div style="font-weight:600">'+e(r.name)+'</div><div class="mono muted" style="font-size:12px">'+r.id+' · '+e(r.code)+'</div></td>'+
+    '<td class="muted" style="max-width:260px;font-size:13px">'+(r.desc?e(r.desc.length>80?r.desc.slice(0,78)+'…':r.desc):'<span class="sr-err" style="font-size:12px">Missing</span>')+'</td>'+
     '<td><span class="'+stCls(r.status)+'">'+r.status+'</span>'+(r.workingDraft?'<div style="font-size:12px;color:#7A4A00;margin-top:4px">+ working draft</div>':'')+'</td>'+
     '<td>'+r.source+'</td><td>'+e(r.domain)+'</td><td class="muted">—</td><td><div>'+r.modified+'</div><div class="muted" style="font-size:12px">'+r.by+'</div></td><td>'+r.published+'</td><td><span class="'+srCls(r.search)+'">'+r.search+'</span></td></tr>';
   }).join('');
-  return '<div class="stack"><div class="row-flex" style="align-items:flex-end"><div style="flex:1 1 320px"><h1>Report Catalog</h1><p class="muted" style="margin:4px 0 0">Every report known to Report Concierge. Only <strong>Published</strong> reports are searchable by the assistant.</p></div>'+btn('+ Add report','btn btn-primary','go','add')+'</div>'+
+  return '<div class="stack"><div class="row-flex" style="align-items:flex-end"><div style="flex:1 1 320px"><h1>Report Catalog</h1><p class="muted" style="margin:4px 0 0">Every report known to Report Concierge. Only <strong>Published</strong> reports are searchable by the assistant.</p></div>'+btn('+ Add report','btn btn-primary','go','add')+'</div>'+legend()+
   '<div class="grid4">'+tiles+'</div>'+
   '<div class="card row-flex" style="padding:14px 16px"><label style="flex:1 1 260px"><span style="position:absolute;left:-9999px">Search reports</span><input id="q" class="inp" data-field="query" value="'+e(S.query)+'" placeholder="Search by name, code base or keyword"></label>'+
   '<div class="row-flex" style="gap:6px"><span class="lbl">Status</span>'+sf+'</div>'+
   '<div class="row-flex" style="gap:6px"><span class="lbl">Source</span>'+srcf+'</div>'+
+  '<div class="row-flex" style="gap:6px"><span class="lbl">Last modified</span>'+sel('fDate',S.fDate,[['any','Any time'],['7','Last 7 days'],['30','Last 30 days'],['older','Older than 30 days']])+'</div>'+
+  '<div class="row-flex" style="gap:6px"><span class="lbl">Sort</span>'+sel('sort',S.sort,[['mod-desc','Last modified (newest)'],['mod-asc','Last modified (oldest)'],['name','Name A–Z'],['status','Status']])+'</div>'+
   '<div class="row-flex" style="gap:6px"><span class="lbl">Owner</span><button class="fchip" disabled title="No owner column in schema">Any owner</button>'+gapB('no owner column')+'</div></div>'+
-  '<div class="card scroll"><table class="tbl"><thead><tr><th>Report'+col('REPORT_DISPLAY_NAME · CODE_BASE_NAME')+'</th><th>Status'+col('APPROVED_TO_PUBLISH_IND + SUBMISSION.STATUS')+'</th><th>Source'+(S.showSchema?'<span class="col">'+gapB('inferred')+'</span>':'')+'</th><th>Domain'+col('DOMAIN_NAME')+'</th><th>Owner'+(S.showSchema?'<span class="col">'+gapB()+'</span>':'')+'</th><th>Last modified'+col('LAST_MODIFIED_DT · USER_NAME')+'</th><th>Published'+col('PUBLISHED_AT')+'</th><th>Search status'+col('SEARCH_DOCUMENT.REBUILT_TIMESTAMP')+'</th></tr></thead><tbody>'+body+'</tbody></table>'+
+  (function(){var act=[];if(S.fStatus!=='All')act.push('Status = '+S.fStatus);if(S.fSource!=='All')act.push('Source = '+S.fSource);if(S.fDate!=='any')act.push('Modified = '+DATE_LBL[S.fDate]);if(S.query.trim())act.push('Search = “'+e(S.query.trim())+'”');
+    return act.length?'<div class="banner b-warn row-flex" style="padding:10px 16px"><span style="flex:1 1 300px"><strong>Filtered:</strong> '+act.join(' · ')+' — showing '+rows.length+' of '+S.reports.length+' reports</span>'+btn('Clear filters','btn btn-sm','clearFilters')+'</div>':'';})()+
+  '<div class="card scroll"><table class="tbl"><thead><tr><th>Report'+col('REPORT_DISPLAY_NAME · CODE_BASE_NAME')+'</th><th>Description'+col('REPORT_DESC.DESCRIPTION')+'</th><th>Status'+col('APPROVED_TO_PUBLISH_IND + SUBMISSION.STATUS')+'</th><th>Source'+(S.showSchema?'<span class="col">'+gapB('inferred')+'</span>':'')+'</th><th>Domain'+col('DOMAIN_NAME')+'</th><th>Owner'+(S.showSchema?'<span class="col">'+gapB()+'</span>':'')+'</th><th>Last modified'+col('LAST_MODIFIED_DT · USER_NAME')+'</th><th>Published'+col('PUBLISHED_AT')+'</th><th>Search status'+col('SEARCH_DOCUMENT.REBUILT_TIMESTAMP')+'</th></tr></thead><tbody>'+body+'</tbody></table>'+
   (rows.length?'':'<div class="muted" style="padding:32px;text-align:center">No reports match these filters.</div>')+
   '<div class="row-flex" style="justify-content:space-between;padding:12px 16px;border-top:1px solid #EDF0F2;font-size:13px"><span class="muted">Showing '+rows.length+' of '+S.reports.length+' · 25 per page</span><div style="display:flex;gap:6px"><button class="btn btn-sm" disabled>Previous</button><button class="btn btn-sm" disabled>Next</button></div></div></div></div>';
 }
@@ -212,7 +232,7 @@ function vAdd(){
     h+='<div class="card form2" style="padding:20px;gap:16px">'+f('name','Display name *','e.g. Provider Credentialing Status')+f('platform','Reporting platform','e.g. Power BI')+f('domain','Domain / category *','e.g. Provider Network')+f('location','Report location','Where users run it')+f('desc','Description *','What the report shows and who uses it',1)+
     '<div style="grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px">'+btn('Cancel','btn','go','catalog')+btn('Create draft','btn btn-primary','createManual')+'</div></div>';
   }
-  if(m==='bulk') h+='<div class="card scroll"><div class="row-flex" style="padding:16px;border-bottom:1px solid #EDF0F2"><div style="flex:1 1 260px"><div style="font-weight:600">Batch “Q4 Claims library”</div><div class="muted" style="font-size:13px">4 files requested · started 10/27/2026 3:10 PM</div></div><span class="chip st-review">Running · 50%</span></div>'+
+  if(m==='bulk') h+='<div class="card scroll"><div class="row-flex" style="padding:16px;border-bottom:1px solid #EDF0F2"><div style="flex:1 1 260px"><div style="font-weight:600">Batch “Q4 Claims library”</div><div class="muted" style="font-size:13px">4 files requested · started 10/27/2026 3:10 PM</div></div><span class="chip st-review">Running · 50%</span>'+btn(S.bulkDone?'Drafts created':'Create drafts from 2 completed files',S.bulkDone?'btn':'btn btn-primary','bulkDrafts')+'</div>'+
     '<table class="tbl" style="min-width:720px"><thead><tr><th>File</th><th>Status</th><th>Message</th><th></th></tr></thead><tbody>'+
     '<tr><td class="mono">CLM_DENIAL_REASONS.sas</td><td class="sr-ok">Completed</td><td class="muted">Draft created · R-1081</td><td>'+btn('Review','btn btn-sm','go','ai')+'</td></tr>'+
     '<tr><td class="mono">CLM_COB_RECOVERY.sas</td><td class="sr-ok">Completed</td><td class="muted">Draft created · possible duplicate of R-1042</td><td>'+btn('Review','btn btn-sm','go','ai')+'</td></tr>'+
@@ -223,8 +243,12 @@ function vAdd(){
 
 function vAi(){
   var rows=AI_DEFS.map(function(a){
+    var val=S.aiVals[a[0]]!=null?S.aiVals[a[0]]:a[2],edited=S.aiVals[a[0]]!=null&&S.aiVals[a[0]]!==a[2];
     var on=!!S.aiAcc[a[0]],cc=a[4]==='Low'?'sr-err':(a[4]==='Medium'?'sr-warn':'sr-ok');
-    return '<div class="row-flex" style="align-items:flex-start;gap:10px 16px;padding:14px 18px;border-bottom:1px solid #EDF0F2"><div style="flex:0 0 190px"><div class="lbl">'+a[1]+'</div>'+col(a[3])+'</div><div style="flex:1 1 300px;min-width:0;white-space:pre-line">'+e(a[2])+'</div><div style="display:flex;gap:8px;align-items:center"><span class="'+cc+'" style="font-size:12px">'+a[4]+' confidence</span>'+btn(on?'Accepted':'Accept',on?'btn btn-sm btn-primary':'btn btn-sm','aiToggle',a[0])+'</div></div>';
+    return '<div class="row-flex" style="align-items:flex-start;gap:10px 16px;padding:14px 18px;border-bottom:1px solid #EDF0F2"><div style="flex:0 0 190px"><div class="lbl">'+a[1]+'</div>'+col(a[3])+'</div><div style="flex:1 1 300px;min-width:0">'+
+      (S.aiEdit===a[0]?'<textarea class="inp" data-field="ai:'+a[0]+'" aria-label="'+a[1]+'">'+e(val)+'</textarea>':'<div style="white-space:pre-line">'+e(val)+'</div>'+(edited?'<div style="font-size:12px;color:#4B2C91;margin-top:4px">Edited by you</div>':''))+
+      '</div><div style="display:flex;gap:8px;align-items:center"><span class="'+cc+'" style="font-size:12px">'+a[4]+' confidence</span>'+
+      btn(S.aiEdit===a[0]?'Done':'Edit','btn btn-sm','aiEdit',a[0])+btn(on?'Accepted':'Accept',on?'btn btn-sm btn-primary':'btn btn-sm','aiToggle',a[0])+'</div></div>';
   }).join('');
   var bar=function(l,v,c){return '<div><div style="display:flex;justify-content:space-between"><span>'+l+'</span><span>'+v+'</span></div><div class="bar"><div style="width:'+(v*100)+'%;background:'+c+'"></div></div></div>';};
   return '<div class="stack" style="max-width:1180px"><div>'+btn('← Add report','btn btn-ghost btn-sm','go','add')+
@@ -296,20 +320,33 @@ function vKb(){
   }).join('');
   return '<div class="stack"><div class="row-flex" style="align-items:flex-end"><div style="flex:1 1 320px"><h1>Knowledge Base</h1><p class="muted" style="margin:4px 0 0">FAQs, run instructions, report locations and troubleshooting: answers that report metadata alone can\'t give.</p></div>'+btn('New entry','btn btn-primary','newKb')+'</div>'+
   '<div class="card row-flex" style="padding:14px 16px;gap:6px"><span class="lbl">Status</span>'+f+'</div>'+
-  '<div class="card scroll"><table class="tbl"><thead><tr><th>Topic'+col('HELP_TOPIC.TOPIC')+'</th><th>Category'+(S.showSchema?'<span class="col">'+gapB()+'</span>':'')+'</th><th>Applies to'+col('LINKED_REPORTS_JSON')+'</th><th>Status'+col('STATUS')+'</th><th>Updated'+col('UPDATED_AT · USER_NAME')+'</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  '<div class="card scroll"><table class="tbl" style="min-width:900px"><thead><tr><th>Topic'+col('HELP_TOPIC.TOPIC')+'</th><th>Category'+(S.showSchema?'<span class="col">'+gapB()+'</span>':'')+'</th><th>Applies to'+col('LINKED_REPORTS_JSON')+'</th><th>Status'+col('STATUS')+'</th><th>Updated'+col('UPDATED_AT · USER_NAME')+'</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 
 function vKbDetail(){
-  var k=kb(S.kid),acts='',edit=k.status==='Draft'||k.status==='In Review';
+  var k=kb(S.kid),acts='',edit=k.status==='Draft'||k.status==='In Review'||(k.status==='Published'&&k.workingDraft);
   var item=Object.assign({},k,{linkedText:applies(k)});
   if(k.status==='Draft') acts=btn('Archive','btn','modal','archive')+btn('Submit for review','btn btn-primary','setStatus','In Review');
   if(k.status==='In Review') acts=btn('Return to draft','btn','setStatus','Draft')+btn('Publish','btn btn-primary','modal','publish');
-  if(k.status==='Published') acts=btn('Unpublish','btn','modal','unpublish')+btn('Archive','btn','modal','archive')+btn('Edit as draft','btn btn-primary','setStatus','Draft');
+  if(k.status==='Published'&&!k.workingDraft) acts=btn('Unpublish','btn','modal','unpublish')+btn('Archive','btn','modal','archive')+btn('Edit as working draft','btn btn-primary','workingDraft','1');
+  if(k.status==='Published'&&k.workingDraft) acts=btn('Discard draft','btn','workingDraft','0')+btn('Publish changes','btn btn-primary','modal','publish');
+  var ktabs=[['content','Content'],['search','Search & index'],['history','History']].map(function(t){return btn(t[1],t[0]===S.kbTab?'tab on':'tab','kbTab',t[0]);}).join('');
+  var pub=k.status==='Published',body='';
+  if(S.kbTab==='content') body='<div class="card form2">'+fieldsHtml(item,K_DEFS,edit,'kb')+'</div>';
+  if(S.kbTab==='search') body=(pub?'':'<div class="banner b-mute"><strong>Not indexed.</strong> Draft, In Review and Archived entries are never searchable by Report Concierge.</div>')+
+    '<div class="grid4"><div class="card" style="padding:14px 16px"><div class="lbl">Search status</div><div class="'+(pub?'sr-ok':'sr-mute')+'" style="font-size:18px;margin-top:4px">'+(pub?'In sync':(k.status==='Archived'?'Removed':'Not indexed'))+'</div></div>'+
+    '<div class="card" style="padding:14px 16px"><div class="lbl">Last rebuilt</div><div style="font-size:18px;font-weight:600;margin-top:4px">'+(pub?k.updated:'—')+'</div>'+col('REPORT_SEARCH_CHUNK.REBUILT_AT')+'</div>'+
+    '<div class="card" style="padding:14px 16px"><div class="lbl">Search chunks</div><div style="font-size:18px;font-weight:600;margin-top:4px">'+(pub?2:0)+'</div>'+col('CHUNK.OWNER_TYPE = HELP_TOPIC')+'</div>'+
+    '<div class="card" style="padding:14px 16px"><div class="lbl">Content type in index</div><div style="font-size:14px;font-weight:600;margin-top:6px">Knowledge Base</div>'+col('CHUNK.HELP_TOPIC_ID')+'</div></div>'+
+    '<p class="muted" style="margin:0;font-size:13px">The index keeps the content type so Report Concierge can tell report metadata apart from supporting Knowledge Base answers (spec §14).</p>';
+  if(S.kbTab==='history') body='<div class="card" style="padding:6px 0">'+(S.showSchema?'<div class="banner b-gap" style="margin:10px 18px"><strong>No audit table in the current schema.</strong> HELP_TOPIC only has CREATED_AT, UPDATED_AT and USER_NAME.</div>':'')+
+    [[k.updated+' 10:02 AM',k.by,'Edited content'],['09/12/2026 3:30 PM','reviewer','Status In Review → Published · embeddings refreshed'],['09/12/2026 11:15 AM',k.by,'Created entry']].map(function(x){return '<div class="row-flex" style="gap:6px 16px;padding:12px 18px;border-bottom:1px solid #EDF0F2"><span class="mono muted" style="flex:0 0 150px;font-size:12px">'+x[0]+'</span><span style="flex:0 0 120px;font-weight:600">'+x[1]+'</span><span style="flex:1 1 280px">'+x[2]+'</span></div>';}).join('')+'</div>';
   if(k.status==='Archived') acts=btn('Restore as draft','btn btn-primary','setStatus','Draft');
   return '<div class="stack" style="gap:16px"><div>'+btn('← Knowledge Base','btn btn-ghost btn-sm','go','kb')+
   '<div class="row-flex" style="margin-top:4px"><div style="flex:1 1 320px;min-width:0"><div class="row-flex" style="gap:10px"><h1>'+e(k.topic)+'</h1><span class="'+stCls(k.status)+'">'+k.status+'</span></div><div class="muted mono" style="font-size:12px;margin-top:4px">'+k.id+' · updated '+k.updated+' by '+k.by+'</div></div><div class="row-flex" style="gap:8px">'+acts+'</div></div></div>'+
   (kbWarn(k)?'<div class="banner b-gap"><strong>This entry links an archived report.</strong> Unlink it or archive this entry too, or the assistant may point users to a retired report.</div>':'')+
-  '<div class="card form2">'+fieldsHtml(item,K_DEFS,edit,'kb')+'</div></div>';
+  (pub&&k.workingDraft?'<div class="banner b-warn"><strong>Working draft.</strong> The published answer stays live in Report Concierge until these changes are published.</div>':'')+
+  '<div role="tablist" style="display:flex;flex-wrap:wrap;border-bottom:1px solid #DDE1E6">'+ktabs+'</div>'+body+'</div>';
 }
 
 function vModal(){
@@ -350,17 +387,28 @@ function newReport(o){
 }
 
 var ACT={
-  go:function(s){S.screen=s;S.modal=null;if(s==='ai')S.aiAcc={};render();},
+  go:function(s){S.screen=s;S.modal=null;if(s==='ai'){S.aiAcc={};S.aiVals={};S.aiEdit=null;}render();},
   toggleSchema:function(){S.showSchema=!S.showSchema;render();},
   fStatus:function(s){S.fStatus=s;render();},
+  tile:function(s){S.fStatus=(S.fStatus===s&&S.fSource==='All'&&S.fDate==='any'&&!S.query)?'All':s;S.fSource='All';S.fDate='any';S.query='';render();},
+  clearFilters:function(){S.fStatus='All';S.fSource='All';S.fDate='any';S.query='';render();},
+  aiEdit:function(k){S.aiEdit=S.aiEdit===k?null:k;if(S.aiEdit===null)S.aiAcc[k]=true;render();},
+  bulkDrafts:function(){
+    if(S.bulkDone){toast('Drafts already created from this batch');return;}
+    S.bulkDone=true;
+    S.reports.unshift({id:'R-1082',name:'COB Recovery Summary',code:'CLM_COB_RECOVERY.sas',platform:'SAS',source:'SAS',domain:'Claims',program:'Recovery',status:'Draft',modified:TODAY,by:'batch',published:'—',search:'Not indexed',rebuilt:'—',chunks:0,desc:'Coordination-of-benefits recoveries by carrier and month. Possible duplicate of R-1042.',purpose:'',location:'SAS EG › Claims › Recovery',keywords:'COB, recovery, other carrier',aliases:'',users:'',ai:true});
+    S.reports.unshift({id:'R-1081',name:'Claim Denial Reasons',code:'CLM_DENIAL_REASONS.sas',platform:'SAS',source:'SAS',domain:'Claims',program:'Claims Ops',status:'Draft',modified:TODAY,by:'batch',published:'—',search:'Not indexed',rebuilt:'—',chunks:0,desc:'Denied claim lines by denial reason code, provider and line of business.',purpose:'',location:'SAS EG › Claims › Monthly',keywords:'denials, denial reasons, CARC',aliases:'',users:'',ai:true});
+    S.screen='catalog';S.fStatus='Draft';S.fSource='All';S.fDate='any';S.query='';
+    toast('2 drafts created from batch · each still needs review before publishing');
+  },
   fSource:function(s){S.fSource=s;render();},
   kbF:function(s){S.kbF=s;render();},
   openReport:function(id){S.rid=id;S.tab='overview';S.screen='detail';render();},
-  openKb:function(id){S.kid=id;S.screen='kbdetail';render();},
+  openKb:function(id){S.kid=id;S.kbTab='content';S.screen='kbdetail';render();},
   tab:function(t){S.tab=t;render();},
   addMode:function(m){S.addMode=m;render();},
   aiToggle:function(k){S.aiAcc[k]=!S.aiAcc[k];render();},
-  saveAi:function(){newReport({name:AI_DEFS[0][2],code:'PREAUTH_RENEWAL_TRACKING.sas',domain:'Utilization Mgmt',program:'Clinical',desc:AI_DEFS[1][2],purpose:AI_DEFS[2][2],keywords:AI_DEFS[7][2],ai:true});},
+  saveAi:function(){var g=function(i){var k=AI_DEFS[i][0];return S.aiVals[k]!=null?S.aiVals[k]:AI_DEFS[i][2];};S.aiEdit=null;newReport({name:g(0),code:'PREAUTH_RENEWAL_TRACKING.sas',domain:g(6),program:'Clinical',desc:g(1),purpose:g(2),keywords:g(7),ai:true});},
   createManual:function(){
     if(!S.m.name){toast('Display name is required');return;}
     newReport({name:S.m.name,platform:S.m.platform||'—',source:'Manual',domain:S.m.domain,location:S.m.location,desc:S.m.desc});
@@ -372,11 +420,12 @@ var ACT={
     else{var r=rep(S.rid);r.status=s;r.modified=TODAY;r.by='you';if(s!=='Published')r.search=r.status==='Draft'&&r.search==='Removed'?'Not indexed':r.search;if(s==='Draft'&&r.search==='Removed')r.search='Not indexed';}
     toast(s==='In Review'?'Submitted for review':(s==='Draft'?'Moved to Draft':'Status updated'));
   },
-  workingDraft:function(v){var r=rep(S.rid);r.workingDraft=v==='1';toast(v==='1'?'Working draft created · published version still live':'Draft discarded');},
+  kbTab:function(t){S.kbTab=t;render();},
+  workingDraft:function(v){var r=S.screen==='kbdetail'?kb(S.kid):rep(S.rid);r.workingDraft=v==='1';toast(v==='1'?'Working draft created · published version still live':'Draft discarded');},
   reindex:function(){var r=rep(S.rid);r.search='In sync';r.rebuilt='10/28 9:12 AM';toast('Index rebuilt · database and search index back in sync');},
   modal:function(a){S.modal={kind:S.screen==='kbdetail'?'kb':'report',action:a};render();},
   closeModal:function(){S.modal=null;render();},
-  newKb:function(){var id='HT-2'+(10+S.kbs.length);S.kbs.unshift({id:id,topic:'New entry',category:'',platform:'All',linked:[],status:'Draft',updated:TODAY,by:'you',summary:'',answer:'',aliases:'',related:'',override:'No'});S.kid=id;S.screen='kbdetail';render();},
+  newKb:function(){var id='HT-2'+(10+S.kbs.length);S.kbs.unshift({id:id,topic:'New entry',category:'',platform:'All',linked:[],status:'Draft',updated:TODAY,by:'you',summary:'',answer:'',aliases:'',related:'',override:'No'});S.kid=id;S.kbTab='content';S.screen='kbdetail';render();},
   confirm:function(){
     var m=S.modal,msg='';if(!m)return;
     if(m.kind==='report'){
@@ -385,7 +434,7 @@ var ACT={
       if(m.action==='unpublish'){r.status='Draft';r.search='Not indexed';msg='Unpublished · removed from conversational retrieval · history kept';}
       if(m.action==='archive'){r.status='Archived';r.search='Removed';msg='Archived · excluded from retrieval · history kept';}
     }else{
-      var k=kb(S.kid);k.updated=TODAY;k.by='you';
+      var k=kb(S.kid);k.updated=TODAY;k.by='you';k.workingDraft=false;
       k.status={publish:'Published',unpublish:'Draft',archive:'Archived'}[m.action];
       msg={publish:'Published · embeddings refreshed',unpublish:'Unpublished · removed from retrieval',archive:'Archived · history kept'}[m.action];
     }
@@ -402,10 +451,12 @@ document.addEventListener('input',function(ev){
   var f=ev.target.getAttribute('data-field');if(!f)return;
   var v=ev.target.value;
   if(f==='query'){S.query=v;render();return;}
+  if(f==='fDate'||f==='sort'){S[f]=v;render();return;}
   var p=f.split(':');
   if(p[0]==='m')S.m[p[1]]=v;
   if(p[0]==='report')rep(S.rid)[p[1]]=v;
   if(p[0]==='kb')kb(S.kid)[p[1]]=v;
+  if(p[0]==='ai')S.aiVals[p[1]]=v;
 });
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&S.modal){S.modal=null;render();}});
 render();
