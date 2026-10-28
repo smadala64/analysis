@@ -76,7 +76,13 @@ textarea.inp{min-height:84px;resize:vertical}
 var TODAY='10/28/2026';
 var S={
   screen:'catalog',showSchema:true,query:'',fStatus:'All',fSource:'All',rid:'R-1042',tab:'overview',kid:'HT-201',kbF:'All',
-  fDate:'any',sort:'mod-desc',kbTab:'content',aiVals:{},aiEdit:null,bulkDone:false,
+  fDate:'any',sort:'mod-desc',kbTab:'content',aiVals:{},aiEdit:null,seq:1081,sasFile:null,sasErr:null,
+  batch:[
+    {f:'CLM_DENIAL_REASONS.sas',st:'Completed',msg:'Ready to create draft',tpl:{name:'Claim Denial Reasons',desc:'Denied claim lines by denial reason code, provider and line of business.',keywords:'denials, denial reasons, CARC',program:'Claims Ops'}},
+    {f:'CLM_COB_RECOVERY.sas',st:'Completed',msg:'Ready · possible duplicate of R-1042',tpl:{name:'COB Recovery Summary',desc:'Coordination-of-benefits recoveries by carrier and month. Possible duplicate of R-1042.',keywords:'COB, recovery, other carrier',program:'Recovery'}},
+    {f:'CLM_MACRO_LIB.sas',st:'Failed',msg:'AI could not interpret source: macro library, no report output'},
+    {f:'CLM_TIMELY_FILING.sas',st:'Running',msg:'Extracting parameters…'}
+  ],
   addMode:'sas',aiAcc:{},modal:null,toast:null,m:{name:'',platform:'',domain:'',location:'',desc:''},
   reports:[
     {id:'R-1042',name:'Claims Paid by Provider — Monthly',code:'CLM_PAID_PROV_M.sas',platform:'SAS',source:'SAS',domain:'Claims',program:'Claims Ops',status:'Published',modified:'10/21/2026',by:'jramirez',published:'10/21/2026',search:'In sync',rebuilt:'10/21 9:14 AM',chunks:14,desc:'Monthly paid claims and amounts by billing provider, with line-of-business split.',purpose:'Provider relations uses it to review payment volumes and spot outliers before quarterly meetings.',location:'SAS EG › Claims › Monthly',keywords:'paid claims, provider payments, NPI',aliases:'Provider paid report, CPP monthly',users:'Provider Relations, Claims Ops',ai:true},
@@ -167,13 +173,40 @@ function vHeader(){
   '<span style="font-size:13px;color:#D5DAE0">Signed in as Content Admin</span></header>';
 }
 function vNav(){
-  var sc=S.screen,on=function(b){return b?'nav-item on':'nav-item';};
-  return '<nav aria-label="Administration"><div class="navsec" style="padding-top:0">Content</div>'+
-  '<button class="'+on(sc==='catalog'||sc==='detail')+'" data-act="go" data-arg="catalog">'+ICON.cat+'Report Catalog<span class="n">'+S.reports.length+'</span></button>'+
-  '<button class="'+on(sc==='kb'||sc==='kbdetail')+'" data-act="go" data-arg="kb">'+ICON.kb+'Knowledge Base<span class="n">'+S.kbs.length+'</span></button>'+
-  '<div class="navsec">Tools</div>'+
-  '<button class="'+on(sc==='add'||sc==='ai')+'" data-act="go" data-arg="add">'+ICON.plus+'Add report</button>'+
-  '<div style="margin-top:auto;padding:14px;font-size:12px;color:#5F6873">Ingestion is a tool inside Report Management, not the landing page (spec §1, §3).</div></nav>';
+  var host=['Home','Report search','My saved reports','Help & FAQ'];
+  return '<nav aria-label="Application" style="background:#E9ECF0"><div class="navsec" style="padding-top:0">Existing app navigation</div>'+
+  host.map(function(n){return '<button class="nav-item" style="color:#6B737D" data-act="toast" data-arg="“'+n+'” is an existing app page, not part of this prototype">'+n+'</button>';}).join('')+
+  '<button class="nav-item on" data-act="go" data-arg="catalog">'+ICON.cat+'Admin</button>'+
+  '<div style="margin-top:auto;padding:14px;font-size:12px;color:#5F6873">The left menu belongs to the host app and stays as-is. <strong>Admin</strong> is one item in it; everything to the right is the admin feature.</div></nav>';
+}
+function vTabs(){
+  var sc=S.screen,kbOn=sc==='kb'||sc==='kbdetail';
+  return '<div style="margin:-4px 0 22px;border-bottom:1px solid #DDE1E6"><div class="muted" style="font-size:12px;margin-bottom:2px">Admin › Report Concierge content</div>'+
+  '<div role="tablist" aria-label="Admin sections" style="display:flex;flex-wrap:wrap">'+
+  '<button role="tab" class="'+(kbOn?'tab':'tab on')+'" data-act="go" data-arg="catalog" style="font-size:15px">Report Catalog <span class="muted" style="font-size:12px">'+S.reports.length+'</span></button>'+
+  '<button role="tab" class="'+(kbOn?'tab on':'tab')+'" data-act="go" data-arg="kb" style="font-size:15px">Knowledge Base <span class="muted" style="font-size:12px">'+S.kbs.length+'</span></button></div></div>';
+}
+function nid(){return 'R-'+(S.seq++);}
+function prettify(f){return f.replace(/\.[^.]+$/,'').split(/[_\-\s]+/).filter(Boolean).map(function(w){return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();}).join(' ');}
+function kb2(n){return Math.max(1,Math.round(n/1024))+' KB';}
+function addFiles(files,mode){
+  files=Array.prototype.slice.call(files||[]);if(!files.length)return;
+  if(mode==='sas'){
+    var f=files[0];
+    if(!/\.sas$/i.test(f.name)){S.sasFile=null;S.sasErr='“'+f.name+'” is not a .sas file. Only SAS source files are supported (spec §17).';}
+    else{S.sasFile={name:f.name,size:kb2(f.size)};S.sasErr=null;}
+    render();return;
+  }
+  files.forEach(function(f){
+    var ok=/\.sas$/i.test(f.name);
+    var row={f:f.name,st:ok?'Queued':'Failed',msg:ok?'Waiting to analyze…':'Unsupported file type (.sas only)'};
+    S.batch.push(row);
+    if(ok){
+      setTimeout(function(){row.st='Running';row.msg='Extracting metadata…';render();},1000+S.batch.length*300);
+      setTimeout(function(){row.st='Completed';row.msg='Ready to create draft';render();},2600+S.batch.length*500);
+    }
+  });
+  toast(files.length+' file'+(files.length>1?'s':'')+' added to batch');
 }
 
 function vCatalog(){
@@ -226,18 +259,35 @@ function vAdd(){
   '<button class="'+oc('sas')+'" data-act="addMode" data-arg="sas"><span class="ai" style="width:max-content">AI-assisted</span><span style="font-weight:600;font-size:16px">Import from SAS source</span><span class="muted" style="font-size:13px">Upload a .sas file; AI proposes name, description, parameters, outputs and keywords for you to review.</span>'+col('EXTRACTION_SUBMISSION · LLM_JUDGE_RUN')+'</button>'+
   '<button class="'+oc('manual')+'" data-act="addMode" data-arg="manual"><span class="chip st-arch" style="width:max-content">Manual</span><span style="font-weight:600;font-size:16px">Create manually</span><span class="muted" style="font-size:13px">For reports with no SAS source (Power BI, vendor reports, others). Enter metadata yourself.</span>'+col('REPORT (no submission row)')+'</button>'+
   '<button class="'+oc('bulk')+'" data-act="addMode" data-arg="bulk"><span class="ai" style="width:max-content">AI-assisted · batch</span><span style="font-weight:600;font-size:16px">Bulk SAS import</span><span class="muted" style="font-size:13px">Queue many files at once; each becomes its own Draft to review.</span>'+col('REVIEW_BATCH_JOB · REVIEW_BATCH_ITEM')+'</button></div>';
-  if(m==='sas') h+='<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:14px"><div style="border:2px dashed #C9CFD6;border-radius:12px;padding:28px;display:flex;flex-wrap:wrap;align-items:center;gap:16px;background:#FAFBFC"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5F6873" stroke-width="1.6" aria-hidden="true"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/></svg><div style="flex:1 1 260px"><div class="mono" style="font-weight:600">PREAUTH_RENEWAL_TRACKING.sas</div><div class="muted" style="font-size:13px">42 KB · ready to analyze · drop another file to replace</div></div>'+btn('Analyze with AI','btn btn-primary','go','ai')+'</div><p class="muted" style="margin:0;font-size:13px">Supported: .sas. Unsupported or malformed files are rejected with a reason (spec §17).</p></div>';
+  var FILEICON='<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5F6873" stroke-width="1.6" aria-hidden="true"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/></svg>';
+  var DZ='border:2px dashed #C9CFD6;border-radius:12px;padding:24px;display:flex;flex-wrap:wrap;align-items:center;gap:16px;background:#FAFBFC';
+  if(m==='sas'){
+    var sf=S.sasFile;
+    h+='<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:14px"><div data-drop="sas" style="'+DZ+'">'+FILEICON+
+    '<div style="flex:1 1 260px">'+(sf?'<div class="mono" style="font-weight:600">'+e(sf.name)+'</div><div class="muted" style="font-size:13px">'+sf.size+' · ready to analyze · browse or drop another file to replace</div>':'<div style="font-weight:600">Drag a .sas file here, or browse your computer</div><div class="muted" style="font-size:13px">One file per import. For many files use Bulk SAS import.</div>')+'</div>'+
+    '<label class="btn" for="sasPick" style="cursor:pointer">Browse files…</label><input type="file" id="sasPick" accept=".sas" data-file="sas" style="position:absolute;left:-9999px">'+
+    (sf?btn('Analyze with AI','btn btn-primary','go','ai'):'<button class="btn btn-primary" disabled>Analyze with AI</button>')+'</div>'+
+    (S.sasErr?'<div class="banner b-err">'+e(S.sasErr)+'</div>':'')+
+    '<p class="muted" style="margin:0;font-size:13px">Supported: .sas. Unsupported or malformed files are rejected with a reason (spec §17). '+(sf?'':'<button class="btn btn-ghost btn-sm" data-act="sampleSas" style="display:inline-flex;min-height:24px;color:#0F5F69;text-decoration:underline">Use sample file for demo</button>')+'</p></div>';
+  }
   if(m==='manual'){
     var f=function(k,label,ph,area){return '<label style="display:flex;flex-direction:column;gap:6px'+(area?';grid-column:1/-1':'')+'"><span class="lbl">'+label+'</span>'+(area?'<textarea class="inp" data-field="m:'+k+'" placeholder="'+ph+'">'+e(S.m[k])+'</textarea>':'<input class="inp" data-field="m:'+k+'" value="'+e(S.m[k])+'" placeholder="'+ph+'">')+'</label>';};
     h+='<div class="card form2" style="padding:20px;gap:16px">'+f('name','Display name *','e.g. Provider Credentialing Status')+f('platform','Reporting platform','e.g. Power BI')+f('domain','Domain / category *','e.g. Provider Network')+f('location','Report location','Where users run it')+f('desc','Description *','What the report shows and who uses it',1)+
     '<div style="grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px">'+btn('Cancel','btn','go','catalog')+btn('Create draft','btn btn-primary','createManual')+'</div></div>';
   }
-  if(m==='bulk') h+='<div class="card scroll"><div class="row-flex" style="padding:16px;border-bottom:1px solid #EDF0F2"><div style="flex:1 1 260px"><div style="font-weight:600">Batch “Q4 Claims library”</div><div class="muted" style="font-size:13px">4 files requested · started 10/27/2026 3:10 PM</div></div><span class="chip st-review">Running · 50%</span>'+btn(S.bulkDone?'Drafts created':'Create drafts from 2 completed files',S.bulkDone?'btn':'btn btn-primary','bulkDrafts')+'</div>'+
+  if(m==='bulk'){
+    var B=S.batch,done=B.filter(function(x){return x.st==='Completed'||x.st==='Failed';}).length,ready=B.filter(function(x){return x.st==='Completed'&&!x.rid;}).length,pct=Math.round(done/B.length*100);
+    var stc={Completed:'sr-ok',Failed:'sr-err',Running:'sr-warn',Queued:'sr-mute'};
+    h+='<div class="card" style="padding:20px"><div data-drop="bulk" style="'+DZ+'">'+FILEICON+'<div style="flex:1 1 260px"><div style="font-weight:600">Drag .sas files here, or browse to select several at once</div><div class="muted" style="font-size:13px">Each file is analyzed separately and becomes its own Draft.</div></div>'+
+    '<label class="btn" for="bulkPick" style="cursor:pointer">Browse files…</label><input type="file" id="bulkPick" accept=".sas" multiple data-file="bulk" style="position:absolute;left:-9999px"></div></div>'+
+    '<div class="card scroll"><div class="row-flex" style="padding:16px;border-bottom:1px solid #EDF0F2"><div style="flex:1 1 260px"><div style="font-weight:600">Batch “Q4 Claims library”</div><div class="muted" style="font-size:13px">'+B.length+' files · '+done+' processed · started 10/27/2026 3:10 PM</div></div><span class="chip '+(pct===100?'st-pub':'st-review')+'">'+(pct===100?'Done':'Running · '+pct+'%')+'</span>'+
+    (ready?btn('Create drafts from '+ready+' completed file'+(ready>1?'s':''),'btn btn-primary','bulkDrafts'):'<button class="btn" disabled>No completed files waiting</button>')+'</div>'+
     '<table class="tbl" style="min-width:720px"><thead><tr><th>File</th><th>Status</th><th>Message</th><th></th></tr></thead><tbody>'+
-    '<tr><td class="mono">CLM_DENIAL_REASONS.sas</td><td class="sr-ok">Completed</td><td class="muted">Draft created · R-1081</td><td>'+btn('Review','btn btn-sm','go','ai')+'</td></tr>'+
-    '<tr><td class="mono">CLM_COB_RECOVERY.sas</td><td class="sr-ok">Completed</td><td class="muted">Draft created · possible duplicate of R-1042</td><td>'+btn('Review','btn btn-sm','go','ai')+'</td></tr>'+
-    '<tr><td class="mono">CLM_MACRO_LIB.sas</td><td class="sr-err">Failed</td><td class="muted">AI could not interpret source: macro library, no report output</td><td>'+btn('Retry','btn btn-sm','toast','Retry queued')+'</td></tr>'+
-    '<tr><td class="mono">CLM_TIMELY_FILING.sas</td><td class="sr-warn">Running · 60%</td><td class="muted">Extracting parameters…</td><td></td></tr></tbody></table></div>';
+    B.map(function(x,i){
+      var a=x.rid?btn('Open draft','btn btn-sm','openReport',x.rid):(x.st==='Completed'?btn('Review','btn btn-sm','go','ai'):(x.st==='Failed'?btn('Retry','btn btn-sm','toast','Retry queued for '+x.f):''));
+      return '<tr><td class="mono">'+e(x.f)+'</td><td class="'+stc[x.st]+'">'+x.st+'</td><td class="muted">'+e(x.rid?'Draft created · '+x.rid:x.msg)+'</td><td>'+a+'</td></tr>';
+    }).join('')+'</tbody></table></div>';
+  }
   return h+'</div>';
 }
 
@@ -253,7 +303,7 @@ function vAi(){
   var bar=function(l,v,c){return '<div><div style="display:flex;justify-content:space-between"><span>'+l+'</span><span>'+v+'</span></div><div class="bar"><div style="width:'+(v*100)+'%;background:'+c+'"></div></div></div>';};
   return '<div class="stack" style="max-width:1180px"><div>'+btn('← Add report','btn btn-ghost btn-sm','go','add')+
   '<div class="row-flex"><h1 style="margin-top:4px;flex:1 1 300px">Review AI-proposed metadata</h1>'+btn('Discard','btn','go','catalog')+btn('Save as Draft','btn btn-primary','saveAi')+'</div>'+
-  '<p class="muted" style="margin:4px 0 0">Source <span class="mono">PREAUTH_RENEWAL_TRACKING.sas</span>. AI output is never published automatically; every field can be edited before it becomes a Draft.</p></div>'+
+  '<p class="muted" style="margin:4px 0 0">Source <span class="mono">'+e((S.sasFile||{name:'PREAUTH_RENEWAL_TRACKING.sas'}).name)+'</span>. AI output is never published automatically; every field can be edited before it becomes a Draft.</p></div>'+
   '<div class="row-flex" style="align-items:flex-start;gap:16px"><div class="card" style="flex:999 1 520px;min-width:0;overflow:hidden">'+rows+'</div>'+
   '<div style="flex:1 1 300px;display:flex;flex-direction:column;gap:16px"><div class="card" style="padding:18px"><div style="display:flex;justify-content:space-between"><span class="lbl">AI quality check</span><span class="ai">LLM judge</span></div><div style="display:flex;align-items:baseline;gap:8px;margin-top:8px"><span style="font-size:34px;font-weight:600">0.82</span><span class="muted">overall</span></div><div style="font-size:13px;margin-bottom:10px">Verdict: <strong>Pass with edits</strong> · Risk: <strong>Medium</strong></div><div style="display:flex;flex-direction:column;gap:8px;font-size:13px">'+bar('Faithful to source',0.91,'#14653A')+bar('Completeness',0.84,'#14653A')+bar('Parameter accuracy',0.68,'#B36B00')+'</div>'+col('LLM_JUDGE_RUN.SCORE_OVERALL · VERDICT · RISK_LEVEL · DIMENSIONS_JSON')+'</div>'+
   '<div class="card" style="padding:18px;display:flex;flex-direction:column;gap:10px"><span class="lbl">Validation warnings</span><div class="banner b-warn"><strong>Possible duplicate.</strong> Similar to R-1063 “Pre-Authorization Turnaround” (same tables, different output). Confirm this is a distinct report.</div><div class="banner b-warn"><strong>Partial extraction.</strong> Default value for PLAN_GROUP could not be determined from source.</div>'+col('EXTRACTION_SUBMISSION.VALIDATION_ERRORS_JSON')+'</div></div></div></div>';
@@ -375,12 +425,12 @@ function vModal(){
 function render(){
   var a=document.activeElement,fid=a&&a.getAttribute&&a.getAttribute('data-field'),ss=a&&a.selectionStart,se=a&&a.selectionEnd;
   var v={catalog:vCatalog,add:vAdd,ai:vAi,detail:vDetail,kb:vKb,kbdetail:vKbDetail}[S.screen]();
-  document.getElementById('app').innerHTML=vHeader()+'<div class="layout">'+vNav()+'<main>'+v+'</main></div>'+vModal()+(S.toast?'<div class="toast" role="status">'+e(S.toast)+'</div>':'');
+  document.getElementById('app').innerHTML=vHeader()+'<div class="layout">'+vNav()+'<main>'+vTabs()+v+'</main></div>'+vModal()+(S.toast?'<div class="toast" role="status">'+e(S.toast)+'</div>':'');
   if(fid){var el=document.querySelector('[data-field="'+fid+'"]');if(el){el.focus();try{el.setSelectionRange(ss,se);}catch(x){}}}
 }
 
 function newReport(o){
-  var id='R-10'+(80+S.reports.length);
+  var id=nid();
   var r=Object.assign({id:id,code:'—',platform:'SAS',source:'SAS',program:'',status:'Draft',modified:TODAY,by:'you',published:'—',search:'Not indexed',rebuilt:'—',chunks:0,purpose:'',location:'',keywords:'',aliases:'',users:'',ai:false},o,{id:id});
   S.reports.unshift(r);S.screen='detail';S.rid=id;S.tab='overview';S.fStatus='All';
   toast('Draft created · not visible to Report Concierge until published');
@@ -394,13 +444,17 @@ var ACT={
   clearFilters:function(){S.fStatus='All';S.fSource='All';S.fDate='any';S.query='';render();},
   aiEdit:function(k){S.aiEdit=S.aiEdit===k?null:k;if(S.aiEdit===null)S.aiAcc[k]=true;render();},
   bulkDrafts:function(){
-    if(S.bulkDone){toast('Drafts already created from this batch');return;}
-    S.bulkDone=true;
-    S.reports.unshift({id:'R-1082',name:'COB Recovery Summary',code:'CLM_COB_RECOVERY.sas',platform:'SAS',source:'SAS',domain:'Claims',program:'Recovery',status:'Draft',modified:TODAY,by:'batch',published:'—',search:'Not indexed',rebuilt:'—',chunks:0,desc:'Coordination-of-benefits recoveries by carrier and month. Possible duplicate of R-1042.',purpose:'',location:'SAS EG › Claims › Recovery',keywords:'COB, recovery, other carrier',aliases:'',users:'',ai:true});
-    S.reports.unshift({id:'R-1081',name:'Claim Denial Reasons',code:'CLM_DENIAL_REASONS.sas',platform:'SAS',source:'SAS',domain:'Claims',program:'Claims Ops',status:'Draft',modified:TODAY,by:'batch',published:'—',search:'Not indexed',rebuilt:'—',chunks:0,desc:'Denied claim lines by denial reason code, provider and line of business.',purpose:'',location:'SAS EG › Claims › Monthly',keywords:'denials, denial reasons, CARC',aliases:'',users:'',ai:true});
+    var ready=S.batch.filter(function(x){return x.st==='Completed'&&!x.rid;});
+    if(!ready.length){toast('No completed files waiting');return;}
+    ready.forEach(function(x){
+      var t=x.tpl||{name:prettify(x.f),desc:'',keywords:'',program:''};
+      var id=nid();x.rid=id;
+      S.reports.unshift({id:id,name:t.name,code:x.f,platform:'SAS',source:'SAS',domain:t.domain||'Claims',program:t.program,status:'Draft',modified:TODAY,by:'batch',published:'—',search:'Not indexed',rebuilt:'—',chunks:0,desc:t.desc,purpose:'',location:'',keywords:t.keywords,aliases:'',users:'',ai:true});
+    });
     S.screen='catalog';S.fStatus='Draft';S.fSource='All';S.fDate='any';S.query='';
-    toast('2 drafts created from batch · each still needs review before publishing');
+    toast(ready.length+' draft'+(ready.length>1?'s':'')+' created from batch · each still needs review before publishing');
   },
+  sampleSas:function(){S.sasFile={name:'PREAUTH_RENEWAL_TRACKING.sas',size:'42 KB'};S.sasErr=null;render();},
   fSource:function(s){S.fSource=s;render();},
   kbF:function(s){S.kbF=s;render();},
   openReport:function(id){S.rid=id;S.tab='overview';S.screen='detail';render();},
@@ -458,6 +512,10 @@ document.addEventListener('input',function(ev){
   if(p[0]==='kb')kb(S.kid)[p[1]]=v;
   if(p[0]==='ai')S.aiVals[p[1]]=v;
 });
+document.addEventListener('change',function(ev){var m=ev.target.getAttribute&&ev.target.getAttribute('data-file');if(m)addFiles(ev.target.files,m);});
+document.addEventListener('dragover',function(ev){ev.preventDefault();var z=ev.target.closest&&ev.target.closest('[data-drop]');if(z)z.style.borderColor='var(--accent)';});
+document.addEventListener('dragleave',function(ev){var z=ev.target.closest&&ev.target.closest('[data-drop]');if(z)z.style.borderColor='#C9CFD6';});
+document.addEventListener('drop',function(ev){ev.preventDefault();var z=ev.target.closest&&ev.target.closest('[data-drop]');if(z&&ev.dataTransfer)addFiles(ev.dataTransfer.files,z.getAttribute('data-drop'));});
 document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&S.modal){S.modal=null;render();}});
 render();
 })();
