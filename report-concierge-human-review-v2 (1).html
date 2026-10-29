@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Human Review v2 — Prototype</title>
+<style>
+:root{--g:#1F6B3A;--g2:#E3F1E7;--ink:#1C2128;--mut:#5F6873;--line:#DDE1E6}
+*{box-sizing:border-box}
+body{margin:0;background:#F4F6F5;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--ink);font-size:14px;line-height:1.45}
+.mono{font-family:Consolas,ui-monospace,monospace}
+h1{margin:0;font-size:24px;font-weight:600}h2{margin:0;font-size:18px;font-weight:600}
+.muted{color:var(--mut)}.lbl{font-size:12px;font-weight:600;color:#3A424D}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:12px 24px;background:#fff;border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px}
+.logo i{width:26px;height:26px;border-radius:6px;background:var(--g);display:inline-block}
+.env{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:#FFF1D6;color:#7A4A00}
+.proto{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:#ECE6FA;color:#4B2C91}
+.topnav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.tn{min-height:36px;padding:0 14px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-weight:600;font-size:13px;cursor:pointer;color:var(--ink)}
+.tn.on{background:var(--g);border-color:var(--g);color:#fff}
+main{max-width:1440px;margin:0 auto;padding:22px 24px 60px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 20px;border-bottom:1px solid var(--line)}
+.tab{min-height:44px;padding:0 14px;border:0;border-bottom:3px solid transparent;background:transparent;font:inherit;font-weight:600;color:var(--mut);cursor:pointer}
+.tab.on{color:var(--ink);border-bottom-color:var(--g)}
+.tab .n{font-size:12px;font-weight:500;color:var(--mut);margin-left:4px}
+.tab .new{font-size:10px;font-weight:700;color:#4B2C91;background:#ECE6FA;border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:0 14px;border:1px solid #C9CFD6;border-radius:8px;background:#fff;color:var(--ink);font:inherit;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;text-decoration:none}
+.btn:hover{background:#F0F2F4}.btn-p{background:var(--g);border-color:var(--g);color:#fff}.btn-p:hover{background:#185A30}
+.btn-d{color:#A3261B;border-color:#E3B4AE}.btn-sm{min-height:30px;padding:0 10px;font-size:12px}.btn-gh{border-color:transparent;background:transparent;padding-left:0}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.c-draft{background:#FFF1D6;color:#7A4A00}.c-rev{background:#E1EAFD;color:#1E44A8}.c-pub{background:#DDF3E6;color:#14653A}.c-arch{background:#E7E9EC;color:#4A525C}
+.c-err{background:#FBE3E0;color:#A3261B}.c-run{background:#E1EAFD;color:#1E44A8}.c-ready{background:#E3F1E7;color:var(--g);border:1px solid #9CC8AB}.c-chg{background:#FDE8D7;color:#8A3B00}.c-wd{background:#FFF1D6;color:#7A4A00;border:1px dashed #C79A3C}
+.ok{color:#14653A;font-weight:600}.warn{color:#8A5300;font-weight:600}.err{color:#A3261B;font-weight:600}.mute{color:var(--mut);font-weight:600}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px}
+.pad{padding:16px 18px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.inp{width:100%;min-height:38px;padding:7px 11px;border:1px solid #C9CFD6;border-radius:8px;background:#fff;font:inherit;color:var(--ink)}
+.inp:focus{outline:2px solid var(--g);outline-offset:-1px}textarea.inp{min-height:76px;resize:vertical}
+select.inp{width:auto;min-width:150px}
+.fchip{min-height:32px;padding:0 12px;border:1px solid #C9CFD6;border-radius:999px;background:#fff;font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.fchip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.scroll{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-size:11.5px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;padding:10px 14px;border-bottom:1px solid var(--line);background:#FAFBFC}
+.tbl td{padding:11px 14px;border-bottom:1px solid #EDF0F2;vertical-align:middle}
+.tbl tr.click{cursor:pointer}.tbl tr.click:hover td{background:#F6FAF7}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{display:flex;flex-direction:column;gap:2px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:left;font:inherit;cursor:pointer}
+.tile.on{border-color:var(--g);box-shadow:0 0 0 1px var(--g)}
+.tile b{font-size:24px}.tile .chip{align-self:flex-start}
+.banner{padding:12px 16px;border-radius:10px;font-size:13px}
+.b-warn{background:#FFF1D6;color:#5C3800}.b-err{background:#FBE3E0;color:#6E1A12}.b-info{background:#E1EAFD;color:#1A3A8A}.b-chg{background:#FDE8D7;color:#6B2E00}.b-mute{background:#E7E9EC;color:#2F363E}.b-ok{background:#E3F1E7;color:#14532D}
+.ai{display:inline-block;font-size:10.5px;font-weight:700;color:#4B2C91;background:#ECE6FA;border-radius:4px;padding:1px 6px}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.fld{padding:14px 18px;border-bottom:1px solid #EDF0F2}.fld.l{border-right:1px solid #EDF0F2}.fld.full{grid-column:1/-1}
+.dtab{min-height:42px;padding:0 4px;margin-right:20px;border:0;border-bottom:2px solid transparent;background:transparent;font:inherit;font-weight:600;color:var(--mut);cursor:pointer}
+.dtab.on{color:var(--ink);border-bottom-color:var(--g)}
+.toast{position:fixed;top:70px;right:24px;z-index:50;max-width:440px;padding:12px 16px;border-radius:10px;background:#1C2128;color:#fff;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.overlay{position:fixed;inset:0;z-index:60;background:rgba(20,24,30,.45);display:flex;align-items:flex-start;justify-content:center;padding:90px 16px;overflow:auto}
+.split{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.split>.side{flex:1 1 280px;max-width:340px}.split>.main{flex:999 1 560px;min-width:0}
+.jobcard{display:block;width:100%;text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;cursor:pointer;margin-bottom:8px}
+.jobcard.on{border-color:var(--g);box-shadow:0 0 0 1px var(--g)}
+.bar{height:6px;background:#EDF0F2;border-radius:3px;margin-top:6px}.bar>div{height:6px;border-radius:3px;background:var(--g)}
+.src{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:12px 16px;border-bottom:1px solid #EDF0F2}
+.src input[type=checkbox]{width:18px;height:18px;accent-color:var(--g)}
+.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;font-weight:600;color:var(--mut)}
+.steps span{padding:4px 10px;border-radius:999px;background:#EEF0F3}.steps span.on{background:var(--g);color:#fff}
+@media (max-width:900px){.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.form{grid-template-columns:1fr}.fld.l{border-right:0}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+'use strict';
+var TODAY='10/29/2026';
+var AIK=['biz','internal','purpose','keywords','users','outputs'];
+function mk(o){
+  var base={platform:'Insider Knowledge',files:1,status:'Draft',ver:0,ready:false,prodVer:0,modified:'10/27/2026',by:'emily.h',published:'—',
+    srcDate:'09/14/2026',srcChanged:false,wd:null,snap:null,notes:'',acc:{},verification:'Pending',hist:[],
+    biz:'',internal:'',purpose:'',keywords:'',users:'',outputs:'Excel, SAS dataset',
+    crit:[['BEGINDATE','Check issue date from','Date','Yes'],['ENDDATE','Check issue date to','Date','Yes'],['CARRIER','Carrier filter','Macro list','No'],['CLIENT / SUBCLIENT','Client and subclient filter','Macro list','No']],
+    outs:[['CARRIER','Carrier identifier','etswh.ets_claim_line.carrier','Char'],['AMOUNT','Summed paid amount for the period','SUM(etswh.ets_claim_line.plan_pay_net_amt)','Num · dollar20.2'],['RUN_DATE','Date and time the report ran','%sysfunc(datetime())','Datetime']]};
+  var r=Object.assign(base,o);
+  if(!r.path)r.path='Insider Knowledge Standard Reports/'+r.folder;
+  return r;
+}
+var S={
+  top:'review',tab:'reports',screen:'list',rid:null,dtab:'overview',q:'',fS:'All',fFlag:'All',sort:'mod',
+  platform:'Insider Knowledge',srcQ:'',srcSel:{},incl:false,lastIndexed:'10/27/2026 6:00 PM',
+  jid:'B16',promSel:{},kid:'RL-1',modal:null,toast:null,seq:300,
+  reports:[
+    mk({id:'R-201',name:'1099 EXTRACTS',folder:'1099 Tax Reports',path:'1099 Tax Reports/1099Extract.sas',platform:'SCORE',files:1,status:'Published',ver:1,prodVer:1,ready:false,published:'10/02/2026',by:'emily.h',modified:'10/02/2026',
+      biz:'Supports 1099 tax reporting by preparing payer and date settings used to produce provider payment extracts.',internal:'Initializes the SCORE environment, connects to Oracle libraries, copies CLAIM.irs_payor into WORK, applies a payer-table patch and sorts the payer list for 1099 processing.',purpose:'Year-end 1099 provider payment reporting.',keywords:'1099 tax extract, provider payment totals, IRS payor, TIN match, carrier EIN totals',users:'Finance, Tax',outputs:'Flat file, SAS dataset, CSV, TXT, Excel',acc:{biz:1,internal:1,purpose:1,keywords:1,users:1,outputs:1},verification:'Verified',
+      hist:[['10/02/2026 3:40 PM','emily.h','Promoted v1 to Production'],['10/02/2026 2:10 PM','emily.h','Published v1 in UAT · marked ready for Production'],['09/30/2026 11:05 AM','system','Draft generated from 1099Extract.sas']]}),
+    mk({id:'R-202',name:'Plan Pay By Carrier',folder:'Accounts Receivable',path:'Accounts Receivable/Plan_Pay_By_Carrier.sas',platform:'Insider Knowledge',status:'Published',ver:2,prodVer:1,ready:true,published:'10/24/2026',modified:'10/24/2026',
+      biz:'Shows plan paid amounts by carrier for a selected check-issue date range, excluding pended recoveries and certain claim and payment types.',internal:'Queries etswh.ets_claim_line in Oracle, sums plan_pay_net_amt by carrier between &BEGINDATE and &ENDDATE, excludes claim_type P, submit/replace code S, ortho payment type T and PEND recovery statuses, then outputs an Excel sheet and a PDF.',purpose:'Accounts receivable reconciliation of plan payments by carrier.',keywords:'plan pay, carrier, paid amount, check issue date, accounts receivable',users:'Accounts Receivable, Finance',outputs:'Excel, PDF',acc:{biz:1,internal:1,purpose:1,keywords:1,users:1,outputs:1},verification:'Verified',
+      crit:[['BEGINDATE','Check issue date from','Date (mm/dd/yyyy)','Yes'],['ENDDATE','Check issue date to','Date (mm/dd/yyyy)','Yes'],['CARRIER','Carrier filter','Macro list','No'],['PAYMENT','Payment type filter','Macro list','No'],['CLIENT / SUBCLIENT','Client and subclient filter','Macro list','No'],['NEWBANKACC','Bank account filter','Macro list','No']],
+      outs:[['DISTBANK','Constant label "PlanPayByCarrier"','literal','Char'],['CARRIER','Carrier identifier','etswh.ets_claim_line.carrier','Char'],['PLANPAY','Plan paid net amount, summed by carrier','SUM(etswh.ets_claim_line.plan_pay_net_amt)','Num · dollar20.2']],
+      hist:[['10/24/2026 4:02 PM','emily.h','Published v2 in UAT · marked ready for Production'],['10/24/2026 3:30 PM','emily.h','Edited output field descriptions'],['10/01/2026 9:12 AM','emily.h','Promoted v1 to Production']]}),
+    mk({id:'R-203',name:'Eligibility',folder:'Eligibility',files:2,status:'Published',ver:1,prodVer:0,ready:true,published:'10/22/2026',modified:'10/22/2026',
+      biz:'Eligibility details for members and subscribers, including enrollment status, relationship, demographic and address information.',internal:'Builds an eligibility report from ets_eligibility with person-demographic overrides, filtered by carrier, client, subclient, affiliation, state and as-of date.',purpose:'Confirm who is eligible for a group at a point in time.',keywords:'eligibility, members, subscribers, enrollment status, as-of date',users:'Underwriting, Customer Service',acc:{biz:1,internal:1,purpose:1,keywords:1,users:1,outputs:1},verification:'Verified',
+      hist:[['10/22/2026 1:15 PM','emily.h','Published v1 in UAT · marked ready for Production'],['10/21/2026 10:00 AM','system','Draft generated (batch 15)']]}),
+    mk({id:'R-204',name:'Participation',folder:'Participation',files:41,status:'Published',ver:1,prodVer:1,published:'09/30/2026',modified:'09/30/2026',srcChanged:true,srcDate:'10/26/2026',
+      biz:'Participation counts and rates by group and plan.',internal:'Combines 41 SAS programs that compute participation by group, plan and month.',purpose:'Track plan participation over time.',keywords:'participation, enrollment rate, group, plan',users:'Sales, Account Management',acc:{biz:1,internal:1,purpose:1,keywords:1,users:1,outputs:1},verification:'Verified',
+      hist:[['09/30/2026 5:00 PM','emily.h','Promoted v1 to Production'],['09/30/2026 2:20 PM','emily.h','Published v1 in UAT']]}),
+    mk({id:'R-205',name:'PremiumByState',folder:'PremiumByState',files:2,status:'Published',ver:1,prodVer:1,published:'10/10/2026',modified:'10/28/2026',
+      wd:{type:'Manual edit',started:'10/28/2026'},snap:{biz:'Premium totals by state and line of business.'},
+      biz:'Premium totals by state and line of business.',internal:'Sums billed premium by state from the premium tables.',purpose:'State premium reporting.',keywords:'premium, state, line of business',users:'Finance',acc:{biz:1,internal:1,purpose:1,keywords:1,users:1,outputs:1},verification:'Verified',
+      hist:[['10/28/2026 9:10 AM','emily.h','Working draft started (manual edit) · v1 stays live'],['10/10/2026 3:00 PM','emily.h','Promoted v1 to Production']]}),
+    mk({id:'R-206',name:'DentalData',folder:'DentalData',files:4,status:'In review',modified:'10/27/2026',
+      biz:'Dental claim and procedure data by provider and member for a selected service period.',internal:'Four SAS programs extract claim lines, procedure codes and provider details, then join to member tables.',purpose:'Ad hoc dental utilization analysis.',keywords:'dental claims, procedures, utilization',users:'Analytics',acc:{biz:1,internal:1,purpose:1,keywords:1},
+      hist:[['10/27/2026 4:40 PM','emily.h','Submitted for review'],['10/27/2026 2:00 PM','system','Draft generated (batch 15)']]}),
+    mk({id:'R-207',name:'STANDARD ELIG',folder:'Underwriting',path:'Underwriting/Elig_StandardElig_fullSSN.sas',platform:'SCORE',status:'Draft',modified:'10/28/2026',
+      biz:'Non-individual business report with eligibility details for members and subscribers.',internal:'Builds eligibility from ddpmrpts.ets_eligibility with supplemental demographic overrides; derives relationship labels, ages and coverage-type counts.',purpose:'',keywords:'standard eligibility, coverage type, subscriber counts',users:'',acc:{biz:1},
+      hist:[['10/28/2026 11:30 AM','system','Draft generated from Elig_StandardElig_fullSSN.sas']]}),
+    mk({id:'R-208',name:'PanelComp',folder:'PanelComp',files:5,status:'Draft',modified:'10/27/2026',biz:'',internal:'Five SAS programs compare provider panel composition across networks.',keywords:'panel, provider network, composition',
+      hist:[['10/27/2026 2:00 PM','system','Draft generated (batch 15) · business description could not be determined']]}),
+    mk({id:'R-209',name:'Claim_Triangle',folder:'Underwriting',path:'Underwriting/Claim_Triangle.sas',status:'Archived',ver:1,prodVer:1,published:'06/02/2026',modified:'08/14/2026',
+      biz:'Claim lag triangle by incurred and paid month.',internal:'Builds incurred-by-paid lag triangles from claim lines.',keywords:'claim triangle, lag, IBNR',acc:{biz:1,internal:1,purpose:1,keywords:1,users:1,outputs:1},
+      hist:[['08/14/2026 10:00 AM','emily.h','Archived · removed from Report Concierge, history kept'],['06/02/2026 1:00 PM','emily.h','Promoted v1 to Production']]})
+  ],
+  sources:[
+    {name:'DentalData',files:4},{name:'Eligibility',files:2},{name:'PanelComp',files:5},{name:'Participation',files:41},
+    {name:'PremiumByState',files:2},{name:'ProfRelMailing',files:2},{name:'TreatmentCostSavings',files:3},{name:'Triangle',files:2}
+  ],
+  jobs:[
+    {id:'B16',name:'Batch 16',started:'10/28/2026 11:20 AM',items:[{f:'STANDARD ELIG',st:'Completed',msg:'Draft created',rid:'R-207'}]},
+    {id:'B15',name:'Batch 15 · Insider Knowledge',started:'10/27/2026 1:45 PM',items:[
+      {f:'DentalData',st:'Completed',msg:'Draft created',rid:'R-206'},{f:'Eligibility',st:'Completed',msg:'Draft created',rid:'R-203'},
+      {f:'PanelComp',st:'Completed',msg:'Draft created · business description missing',rid:'R-208'},{f:'Triangle',st:'Failed',msg:'AI could not interpret source: macro library, no report output'}]}
+  ],
+  plog:[['10/02/2026 3:40 PM','1099 EXTRACTS','v1','New in Production','emily.h'],['10/10/2026 3:00 PM','PremiumByState','v1','New in Production','emily.h'],['10/01/2026 9:12 AM','Plan Pay By Carrier','v1','New in Production','emily.h'],['09/30/2026 5:00 PM','Participation','v1','New in Production','emily.h']],
+  lib:[
+    {id:'RL-1',title:'How to run reports',type:'FAQ',src:'Client Knowledge Help PDF',link:'Client_Knowledge_Help.pdf',status:'Published',reports:'All Client Knowledge reports',body:'Choose criteria first (Begin Date, End Date, Client, Network, Subclient), then run Graph, Text, multiple-report or Data output.'},
+    {id:'RL-2',title:'How to print a graph or text report',type:'FAQ',src:'Client Knowledge Help PDF',link:'Client_Knowledge_Help.pdf',status:'Published',reports:'All Client Knowledge reports',body:'HTML: set orientation to Landscape, margins under 0.5 inches, then File > Print. PDF: open in Adobe Acrobat, then File > Print.'},
+    {id:'RL-3',title:'SAS Enterprise Guide: running a standard report',type:'Word document',src:'SAS_EG_Run_Guide.docx',link:'SAS_EG_Run_Guide.docx',status:'Draft',reports:'Insider Knowledge standard reports',body:'Open SAS Enterprise Guide, go to the report folder, open the program, set the prompts and run.'},
+    {id:'RL-4',title:'Report request process',type:'Confluence page',src:'Confluence › Reporting › Request a report',link:'https://confluence.example/reporting/request',status:'Published',reports:'—',body:'How to request a new standard report or a change to an existing one.'}
+  ],
+  feedback:[
+    {q:'I want to find a report that supports a wellness-related business need',a:'Recommended report: AGENTS FOR INDIVIDUALS',up:false,reason:'Wrong report selected',comment:'There is a report called Claim Wellness Report. It should have suggested that report first.',rid:null},
+    {q:'Which report shows plan paid by carrier?',a:'Recommended report: Plan Pay By Carrier',up:true,rid:'R-202'},
+    {q:'Where do I find participation rates by group?',a:'Recommended report: Participation',up:false,reason:'Description out of date',comment:'Participation now includes monthly trend; description does not mention it.',rid:'R-204'}
+  ]
+};
+
+function e(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function B(label,cls,act,arg,extra){return '<button class="btn '+(cls||'')+'" data-act="'+act+'"'+(arg!=null?' data-arg="'+e(arg)+'"':'')+(extra||'')+'>'+label+'</button>';}
+function rep(id){return S.reports.find(function(r){return r.id===id;});}
+function stChip(s){var c={'Draft':'c-draft','In review':'c-rev','Published':'c-pub','Archived':'c-arch'}[s]||'c-arch';return '<span class="chip '+c+'">'+s+'</span>';}
+function aiDone(r){return AIK.filter(function(k){return r.acc[k];}).length;}
+function search(r){if(r.status==='Archived')return ['Removed','mute'];if(r.status!=='Published')return ['Not indexed','mute'];if(r.wd)return ['Live: v'+r.ver+' (draft not indexed)','ok'];return ['In sync','ok'];}
+function flags(r){var f='';if(r.wd)f+=' <span class="chip c-wd">Working draft</span>';if(r.srcChanged&&r.status==='Published')f+=' <span class="chip c-chg">Source changed</span>';if(r.ready&&r.status==='Published'&&r.prodVer<r.ver)f+=' <span class="chip c-ready">Ready for Prod</span>';return f;}
+function hist(r,txt){r.hist.unshift([TODAY+' '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),'you',txt]);r.modified=TODAY;r.by='you';}
+var tmr;function toast(m){S.toast=m;render();clearTimeout(tmr);tmr=setTimeout(function(){S.toast=null;render();},3600);}
+function nid(){return 'R-'+(S.seq++);}
+function readyList(){return S.reports.filter(function(r){return r.status==='Published'&&r.ready&&r.prodVer<r.ver;});}
+
+/* ---------- header & tabs ---------- */
+function vHeader(){
+  return '<header><div class="logo"><i></i>AI Report Operations Hub</div><span class="env" title="Environment">UAT environment</span><span class="proto">Prototype · mock data</span>'+
+  '<div class="topnav">'+[['concierge','Report Concierge'],['review','Human Review'],['feedback','Feedback Inbox']].map(function(t){return '<button class="tn'+(S.top===t[0]?' on':'')+'" data-act="top" data-arg="'+t[0]+'">'+t[1]+'</button>';}).join('')+'</div></header>';
+}
+function vTabs(){
+  var t=[['reports','Reports',S.reports.length],['load','Load from source'],['jobs','Batch jobs',S.jobs.length],['promote','Promote to Production',readyList().length,1],['library','Resource Library',S.lib.length]];
+  return '<div class="tabs" role="tablist">'+t.map(function(x){return '<button role="tab" class="tab'+(S.tab===x[0]?' on':'')+'" data-act="tab" data-arg="'+x[0]+'">'+x[1]+(x[2]!=null?'<span class="n">'+x[2]+'</span>':'')+(x[3]?'<span class="new">NEW</span>':'')+'</button>';}).join('')+'</div>';
+}
+function flowSteps(on){
+  var s=['1 Load from source','2 Review & edit','3 Publish in UAT','4 Mark ready','5 Promote to Production'];
+  return '<div class="steps" aria-label="Workflow">'+s.map(function(x,i){return '<span class="'+(i===on?'on':'')+'">'+x+'</span>'+(i<4?'›':'');}).join('')+'</div>';
+}
+
+/* ---------- reports list ---------- */
+function vReports(){
+  var q=S.q.trim().toLowerCase();
+  var rows=S.reports.filter(function(r){
+    var f=S.fFlag==='All'||(S.fFlag==='wd'&&r.wd)||(S.fFlag==='chg'&&r.srcChanged&&r.status==='Published')||(S.fFlag==='ready'&&r.ready&&r.status==='Published'&&r.prodVer<r.ver)||(S.fFlag==='ai'&&r.status!=='Archived'&&aiDone(r)<AIK.length);
+    return f&&(S.fS==='All'||r.status===S.fS)&&(!q||(r.name+' '+r.folder+' '+r.path+' '+r.keywords+' '+r.biz).toLowerCase().indexOf(q)>=0);
+  });
+  var pd=function(s){var p=s.split('/');return new Date(+p[2],+p[0]-1,+p[1]);};
+  rows.sort(function(a,b){return S.sort==='name'?a.name.localeCompare(b.name):pd(b.modified)-pd(a.modified);});
+  var tiles=['Draft','In review','Published','Archived'].map(function(s){var n=S.reports.filter(function(r){return r.status===s;}).length;return '<button class="tile'+(S.fS===s?' on':'')+'" data-act="tile" data-arg="'+s+'">'+stChip(s)+'<b>'+n+'</b></button>';}).join('');
+  var fl=[['All','All'],['ai','AI fields not reviewed'],['wd','Working draft'],['chg','Source changed'],['ready','Ready for Prod']].map(function(x){return '<button class="fchip'+(S.fFlag===x[0]?' on':'')+'" data-act="fFlag" data-arg="'+x[0]+'">'+x[1]+'</button>';}).join('');
+  var st=['All','Draft','In review','Published','Archived'].map(function(x){return '<button class="fchip'+(S.fS===x?' on':'')+'" data-act="fS" data-arg="'+x+'">'+x+'</button>';}).join('');
+  var body=rows.map(function(r){
+    var sr=search(r),ai=aiDone(r);
+    return '<tr class="click" data-act="open" data-arg="'+r.id+'"><td><div style="font-weight:600">'+e(r.name)+'</div><div class="mono muted" style="font-size:12px">'+e(r.path)+' · '+r.files+' SAS file'+(r.files>1?'s':'')+'</div></td>'+
+    '<td>'+stChip(r.status)+'<div style="margin-top:4px">'+flags(r)+'</div></td><td>'+e(r.platform)+'</td>'+
+    '<td>'+(r.ver?'UAT v'+r.ver:'—')+'<div class="muted" style="font-size:12px">Prod '+(r.prodVer?'v'+r.prodVer:'—')+'</div></td>'+
+    '<td>'+(r.status==='Archived'?'—':'<span class="'+(ai===AIK.length?'ok':'warn')+'">'+ai+' / '+AIK.length+'</span>')+'</td>'+
+    '<td>'+r.modified+'<div class="muted" style="font-size:12px">'+r.by+'</div></td><td><span class="'+sr[1]+'" style="font-size:13px">'+sr[0]+'</span></td></tr>';
+  }).join('');
+  return '<div class="stack"><div class="row" style="align-items:flex-end"><div style="flex:1 1 360px"><h1>Reports</h1><p class="muted" style="margin:4px 0 0">Every report in the data dictionary for this environment. Only <strong>Published</strong> versions are suggested by Report Concierge.</p></div>'+B('+ Load from source','btn-p','tab','load')+'</div>'+flowSteps(-1)+
+  '<div class="grid4">'+tiles+'</div>'+
+  '<div class="card pad row"><label style="flex:1 1 260px"><span style="position:absolute;left:-9999px">Search reports</span><input class="inp" data-field="q" value="'+e(S.q)+'" placeholder="Search by report, path, keyword or description"></label>'+
+  '<div class="row" style="gap:6px"><span class="lbl">Status</span>'+st+'</div><div class="row" style="gap:6px"><span class="lbl">Needs attention</span>'+fl+'</div>'+
+  '<div class="row" style="gap:6px"><span class="lbl">Sort</span><select class="inp" data-field="sort"><option value="mod"'+(S.sort==='mod'?' selected':'')+'>Last modified</option><option value="name"'+(S.sort==='name'?' selected':'')+'>Name A–Z</option></select></div></div>'+
+  ((S.fS!=='All'||S.fFlag!=='All'||q)?'<div class="banner b-warn row"><span style="flex:1">Showing '+rows.length+' of '+S.reports.length+' reports (filtered)</span>'+B('Clear filters','btn-sm','clear')+'</div>':'')+
+  '<div class="card scroll"><table class="tbl" style="min-width:1050px"><thead><tr><th>Report / source</th><th>Status</th><th>Platform</th><th>Version</th><th>AI fields reviewed</th><th>Last modified</th><th>Report Concierge</th></tr></thead><tbody>'+body+'</tbody></table>'+
+  (rows.length?'':'<div class="muted" style="padding:28px;text-align:center">No reports match.</div>')+
+  '<div class="row" style="justify-content:space-between;padding:10px 16px;font-size:13px"><span class="muted">'+rows.length+' reports · 25 per page</span><div class="row" style="gap:6px"><button class="btn btn-sm" disabled>Previous</button><button class="btn btn-sm" disabled>Next</button></div></div></div></div>';
+}
+
+/* ---------- load from source ---------- */
+function srcState(name){
+  var r=S.reports.find(function(x){return x.folder===name&&x.status!=='Archived';});
+  if(!r)return {t:'New',c:'c-arch',r:null};
+  if(r.status==='Published'&&r.srcChanged)return {t:'Published · source changed',c:'c-chg',r:r};
+  return {t:r.status==='Published'?'Published v'+r.ver:(r.status+' exists'),c:r.status==='Published'?'c-pub':'c-draft',r:r};
+}
+function vLoad(){
+  var q=S.srcQ.trim().toLowerCase();
+  var list=S.sources.filter(function(s){var st=srcState(s.name);return (!q||s.name.toLowerCase().indexOf(q)>=0)&&(S.incl||!st.r||st.r.srcChanged);});
+  var sel=Object.keys(S.srcSel).filter(function(k){return S.srcSel[k];});
+  var rows=list.map(function(s){
+    var st=srcState(s.name),on=!!S.srcSel[s.name];
+    return '<label class="src"><input type="checkbox" data-chk="src" data-arg="'+e(s.name)+'"'+(on?' checked':'')+'><div style="flex:1 1 260px"><div style="font-weight:600">'+e(s.name)+' · '+s.files+' SAS file'+(s.files>1?'s':'')+'</div><div class="mono muted" style="font-size:12px">Insider Knowledge Standard Reports/'+e(s.name)+(st.r&&st.r.srcChanged?' · modified '+st.r.srcDate+' (after publish)':'')+'</div></div><span class="chip '+st.c+'">'+st.t+'</span></label>';
+  }).join('');
+  return '<div class="stack"><div><h1>Load from source</h1><p class="muted" style="margin:4px 0 0">Choose report program files from this environment\'s source location. The AI generates a draft for each report; nothing is visible to Report Concierge until it is reviewed and published.</p></div>'+flowSteps(0)+
+  '<div class="card pad row"><div style="flex:1 1 380px"><div class="lbl">Source location (UAT)</div><div class="mono" style="font-size:13px;margin-top:2px">[UAT network drive] › Insider Knowledge Standard Reports</div><div class="muted" style="font-size:12px;margin-top:2px">Last indexed '+S.lastIndexed+' · '+S.sources.length+' report folders · Future: read the latest developer-published files from the SAS report repository</div></div>'+B('Refresh source list','','refresh')+'</div>'+
+  '<div class="card"><div class="row pad" style="border-bottom:1px solid #EDF0F2"><label class="row" style="gap:6px"><span class="lbl">Platform</span><select class="inp" data-field="platform"><option'+(S.platform==='Insider Knowledge'?' selected':'')+'>Insider Knowledge</option><option'+(S.platform==='SCORE'?' selected':'')+'>SCORE</option><option'+(S.platform==='Client Knowledge'?' selected':'')+'>Client Knowledge</option></select></label>'+
+  '<label style="flex:1 1 240px"><span style="position:absolute;left:-9999px">Filter source reports</span><input class="inp" data-field="srcQ" value="'+e(S.srcQ)+'" placeholder="Filter by folder or report name"></label>'+
+  '<label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-chk="incl"'+(S.incl?' checked':'')+' style="width:18px;height:18px;accent-color:var(--g)">Include reports that already have a draft or published version</label></div>'+
+  '<div class="row pad" style="border-bottom:1px solid #EDF0F2;gap:8px">'+B('Select all shown','btn-sm','selAll')+B('Clear selection','btn-sm','selNone')+'<span class="muted" style="font-size:13px">Tip: select one folder for a single report, or a whole category for a batch.</span></div>'+
+  (rows||'<div class="pad muted">No new or changed reports. Tick “Include reports that already have a draft or published version” to regenerate others.</div>')+'</div>'+
+  '<div class="card pad row"><div style="flex:1 1 300px"><strong>'+sel.length+' report'+(sel.length===1?'':'s')+' selected</strong><div class="muted" style="font-size:12px">Published reports get a new working draft; the published version stays live until the draft is published.</div></div>'+
+  '<label class="btn" for="upl" style="cursor:pointer">Upload from my computer</label><input type="file" id="upl" accept=".sas" multiple data-file="1" style="position:absolute;left:-9999px">'+
+  '<button class="btn btn-p" data-act="generate"'+(sel.length?'':' disabled')+'>Generate draft'+(sel.length>1?'s ('+sel.length+')':'')+'</button></div></div>';
+}
+
+/* ---------- jobs ---------- */
+function vJobs(){
+  var j=S.jobs.find(function(x){return x.id===S.jid;})||S.jobs[0];
+  var side=S.jobs.map(function(x){var d=x.items.filter(function(i){return i.st==='Completed'||i.st==='Failed';}).length,f=x.items.filter(function(i){return i.st==='Failed';}).length;
+    return '<button class="jobcard'+(x.id===j.id?' on':'')+'" data-act="job" data-arg="'+x.id+'"><div class="row" style="justify-content:space-between"><strong>'+e(x.name)+'</strong><span class="chip '+(d<x.items.length?'c-run':(f?'c-err':'c-pub'))+'">'+(d<x.items.length?'Running':(f?'Completed with issues':'Completed'))+'</span></div><div class="muted" style="font-size:12px;margin-top:4px">'+d+'/'+x.items.length+' processed · '+x.started+'</div><div class="bar"><div style="width:'+Math.round(d/x.items.length*100)+'%"></div></div></button>';}).join('');
+  var stc={Completed:'ok',Failed:'err',Running:'warn',Queued:'mute'};
+  var rows=j.items.map(function(i){var a=i.rid?B('Open draft','btn-sm','open',i.rid):(i.st==='Failed'?B('Retry','btn-sm','retry',i.f):'');
+    return '<tr><td style="font-weight:600">'+e(i.f)+'</td><td class="'+stc[i.st]+'">'+i.st+'</td><td class="muted">'+e(i.msg)+'</td><td>'+a+'</td></tr>';}).join('');
+  return '<div class="stack"><div><h1>Batch jobs</h1><p class="muted" style="margin:4px 0 0">Background AI extraction. Each completed item becomes a draft to review in Reports; publishing happens only after review.</p></div>'+flowSteps(1)+
+  '<div class="split"><div class="side">'+side+'</div><div class="main card scroll"><div class="row pad" style="border-bottom:1px solid #EDF0F2"><h2 style="flex:1">'+e(j.name)+'</h2>'+B('Review drafts in Reports','btn-p','reviewDrafts')+'</div>'+
+  '<table class="tbl" style="min-width:620px"><thead><tr><th>Report</th><th>Status</th><th>Message</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div></div>';
+}
+
+/* ---------- detail ---------- */
+var FIELDS=[
+  {k:'name',label:'Report name',req:1},{k:'platform',label:'Platform'},
+  {k:'biz',label:'Business description (shown to users)',req:1,multi:1,ai:1},
+  {k:'internal',label:'Technical description',multi:1,ai:1},
+  {k:'purpose',label:'Purpose / when to use it',ai:1},{k:'users',label:'Intended users',ai:1},
+  {k:'keywords',label:'Search keywords',ai:1,full:1},{k:'outputs',label:'Output types',ai:1},{k:'folder',label:'Report category'},
+  {k:'notes',label:'Reviewer notes',multi:1}
+];
+function editable(r){return r.status==='Draft'||r.status==='In review'||(r.status==='Published'&&!!r.wd);}
+function vDetail(){
+  var r=rep(S.rid),ed=editable(r),a='';
+  if(r.status==='Draft')a=B('Delete draft','btn-d','delDraft')+B('Submit for review','btn-p','status','In review');
+  if(r.status==='In review')a=B('Return to draft','','status','Draft')+B('Publish in UAT','btn-p','modal','publish');
+  if(r.status==='Published'&&!r.wd){a=B('Archive','','modal','archive')+B('Unpublish','','modal','unpublish')+B('Regenerate from source','','modal','regen')+B('Edit','','editWd')+(r.prodVer<r.ver?(r.ready?B('Ready for Prod ✓','','unready'):B('Mark ready for Production','btn-p','ready')):'');}
+  if(r.status==='Published'&&r.wd)a=B('Discard working draft','','discard')+B('Publish changes (v'+(r.ver+1)+')','btn-p','modal','publish');
+  if(r.status==='Archived')a=B('Restore as draft','btn-p','restore');
+  var step=r.status==='Draft'||r.status==='In review'||r.wd?1:(r.status==='Published'?(r.prodVer>=r.ver?4:(r.ready?3:2)):-1);
+  var h='<div class="stack"><div>'+B('← Reports','btn-sm btn-gh','tab','reports')+
+  '<div class="row" style="margin-top:4px;align-items:flex-start"><div style="flex:1 1 380px;min-width:0"><div class="row" style="gap:10px"><h1>'+e(r.name)+'</h1>'+stChip(r.status)+flags(r)+'</div>'+
+  '<div class="muted mono" style="font-size:12px;margin-top:4px">'+e(r.path)+' · source file dated '+r.srcDate+' · UAT '+(r.ver?'v'+r.ver:'not published')+' · Production '+(r.prodVer?'v'+r.prodVer:'not promoted')+'</div></div><div class="row" style="gap:8px">'+a+'</div></div></div>'+flowSteps(step);
+  if(r.srcChanged&&r.status==='Published'&&!r.wd)h+='<div class="banner b-chg row"><span style="flex:1 1 300px"><strong>Program file changed on '+r.srcDate+'</strong>, after v'+r.ver+' was published. Regenerate to get updated AI suggestions; v'+r.ver+' stays live meanwhile.</span>'+B('Regenerate from source','','modal','regen')+'</div>';
+  if(r.wd)h+='<div class="banner b-warn"><strong>Working draft ('+e(r.wd.type)+', started '+r.wd.started+').</strong> Report Concierge keeps using published v'+r.ver+' until you publish these changes. No delete needed.</div>';
+  if(r.status==='Archived')h+='<div class="banner b-mute"><strong>Archived.</strong> Kept for history; not suggested by Report Concierge.</div>';
+  if(r.ready&&r.status==='Published'&&r.prodVer<r.ver)h+='<div class="banner b-ok row"><span style="flex:1">Marked ready for Production. It will appear in <strong>Promote to Production</strong>.</span>'+B('Go to Promote','btn-sm','tab','promote')+'</div>';
+  var ai=aiDone(r);
+  if(ed&&ai<AIK.length)h+='<div class="banner b-info">'+ai+' of '+AIK.length+' AI-suggested fields reviewed. Mark each one reviewed or edit it; every field is on this one form.</div>';
+  var tabs=[['overview','Overview'],['criteria','Criteria & parameters'],['outputs','Output fields & lineage'],['search','Report Concierge'],['history','History & versions']];
+  h+='<div class="row" style="border-bottom:1px solid var(--line);gap:0">'+tabs.map(function(t){return '<button class="dtab'+(S.dtab===t[0]?' on':'')+'" data-act="dtab" data-arg="'+t[0]+'">'+t[1]+'</button>';}).join('')+'<span style="flex:1"></span>'+B('Open detailed document','btn-sm','toast','Opens the existing detailed review document')+' '+B('Download workbook','btn-sm','toast','Downloads the Excel review workbook')+' '+B('Show raw JSON','btn-sm','toast','Shows the raw draft JSON (existing feature)')+'</div>';
+  if(S.dtab==='overview'){
+    h+='<div class="card form">'+FIELDS.map(function(f,i){
+      var v=r[f.k]||'',cls='fld '+(f.multi||f.full?'full':(i%2===0?'l':''));
+      var badge=f.ai?(r.acc[f.k]?' <span class="chip c-pub" style="height:20px">Reviewed</span>':' <span class="ai">AI suggestion</span>'):'';
+      var ctl=ed?(f.multi?'<textarea class="inp" data-field="r:'+f.k+'" aria-label="'+f.label+'">'+e(v)+'</textarea>':'<input class="inp" data-field="r:'+f.k+'" value="'+e(v)+'" aria-label="'+f.label+'">'):'<div style="white-space:pre-line">'+(v?e(v):'<span class="muted">—</span>')+'</div>';
+      var mark=f.ai&&ed?' <button class="btn btn-sm" data-act="acc" data-arg="'+f.k+'" style="margin-left:auto">'+(r.acc[f.k]?'Undo reviewed':'Mark reviewed')+'</button>':'';
+      return '<div class="'+cls+'"><div class="row" style="gap:6px"><span class="lbl">'+f.label+(f.req?' <span style="color:#A3261B">*</span>':'')+'</span>'+badge+mark+'</div><div style="margin-top:6px">'+ctl+'</div></div>';
+    }).join('')+'</div>';
+  }
+  if(S.dtab==='criteria')h+='<div class="card scroll"><div class="pad" style="border-bottom:1px solid #EDF0F2"><strong>What a user chooses before running the report</strong> <span class="ai">AI suggestion</span></div><table class="tbl" style="min-width:700px"><thead><tr><th>Parameter</th><th>Meaning</th><th>Type</th><th>Required</th></tr></thead><tbody>'+
+    r.crit.map(function(c,i){return '<tr><td class="mono">'+e(c[0])+'</td><td>'+(ed?'<input class="inp" data-field="crit:'+i+'" value="'+e(c[1])+'">':e(c[1]))+'</td><td>'+e(c[2])+'</td><td>'+c[3]+'</td></tr>';}).join('')+'</tbody></table></div>';
+  if(S.dtab==='outputs')h+='<div class="card scroll"><div class="pad" style="border-bottom:1px solid #EDF0F2"><strong>Output fields with description and lineage</strong> <span class="ai">AI suggestion</span> <span class="muted" style="font-size:12px">Lineage = where each output comes from in the database</span></div><table class="tbl" style="min-width:860px"><thead><tr><th>Output field</th><th>Description</th><th>Lineage (source)</th><th>Type / format</th></tr></thead><tbody>'+
+    r.outs.map(function(o,i){return '<tr><td class="mono" style="font-weight:600">'+e(o[0])+'</td><td>'+(ed?'<input class="inp" data-field="out:'+i+'" value="'+e(o[1])+'">':e(o[1]))+'</td><td class="mono" style="font-size:12px">'+e(o[2])+'</td><td>'+e(o[3])+'</td></tr>';}).join('')+'</tbody></table></div>';
+  if(S.dtab==='search'){var sr=search(r);
+    h+='<div class="grid4"><div class="card pad"><div class="lbl">Suggested by Report Concierge?</div><div class="'+sr[1]+'" style="font-size:16px;margin-top:4px">'+(r.status==='Published'?'Yes':'No')+'</div></div><div class="card pad"><div class="lbl">Version in use</div><div style="font-size:16px;font-weight:600;margin-top:4px">'+(r.status==='Published'?'v'+r.ver:'—')+'</div></div><div class="card pad"><div class="lbl">Index status</div><div class="'+sr[1]+'" style="font-size:16px;margin-top:4px">'+sr[0]+'</div></div><div class="card pad"><div class="lbl">Embedded fields</div><div style="font-size:13px;margin-top:6px">Name, business description, keywords, output fields, parameters</div></div></div>'+
+    (r.status!=='Published'?'<div class="banner b-mute">Drafts, reports in review and archived reports are never suggested to users. The report may still exist and be runnable in BI tools.</div>':'');}
+  if(S.dtab==='history'){
+    var vers=[];for(var v=r.ver;v>=1;v--)vers.push('<tr><td>v'+v+'</td><td>'+(v===r.ver?'Published in UAT (live)':'Superseded')+'</td><td>'+(r.prodVer===v?'<span class="ok">In Production</span>':(r.prodVer>v?'Replaced in Production':'—'))+'</td></tr>');
+    if(r.wd)vers.unshift('<tr><td>v'+(r.ver+1)+'</td><td><span class="chip c-wd">Working draft</span></td><td>—</td></tr>');
+    h+='<div class="split"><div class="main card"><div class="pad" style="border-bottom:1px solid #EDF0F2"><strong>Activity</strong></div>'+r.hist.map(function(x){return '<div class="row" style="padding:10px 18px;border-bottom:1px solid #EDF0F2;gap:6px 16px"><span class="mono muted" style="flex:0 0 160px;font-size:12px">'+x[0]+'</span><span style="flex:0 0 80px;font-weight:600">'+x[1]+'</span><span style="flex:1 1 260px">'+e(x[2])+'</span></div>';}).join('')+'</div>'+
+    '<div class="card scroll" style="flex:1 1 360px;max-width:460px"><div class="pad" style="border-bottom:1px solid #EDF0F2"><strong>Versions</strong></div><table class="tbl"><thead><tr><th>Version</th><th>UAT</th><th>Production</th></tr></thead><tbody>'+(vers.join('')||'<tr><td colspan="3" class="muted">Not published yet</td></tr>')+'</tbody></table></div></div>';
+  }
+  return h+'</div>';
+}
+
+/* ---------- promote ---------- */
+function vPromote(){
+  var list=readyList();
+  var rows=list.map(function(r){var on=!!S.promSel[r.id];
+    return '<tr><td><input type="checkbox" data-chk="prom" data-arg="'+r.id+'"'+(on?' checked':'')+' style="width:18px;height:18px;accent-color:var(--g)" aria-label="Select '+e(r.name)+'"></td><td><button class="btn btn-gh btn-sm" data-act="open" data-arg="'+r.id+'" style="font-weight:700">'+e(r.name)+'</button></td><td>v'+r.ver+'</td><td>'+(r.prodVer?'v'+r.prodVer:'—')+'</td><td>'+(r.prodVer?'<span class="chip c-rev">Update v'+r.prodVer+' → v'+r.ver+'</span>':'<span class="chip c-pub">New in Production</span>')+'</td><td>'+r.modified+' · '+r.by+'</td></tr>';}).join('');
+  var sel=list.filter(function(r){return S.promSel[r.id];}).length;
+  return '<div class="stack"><div class="row" style="align-items:flex-end"><div style="flex:1 1 360px"><h1>Promote to Production</h1><p class="muted" style="margin:4px 0 0">Reports reviewed and published in UAT, then marked ready. Promotion copies the approved version to Production so the work is not redone there.</p></div><button class="btn btn-p" data-act="promote"'+(sel?'':' disabled')+'>Promote selected ('+sel+')</button></div>'+flowSteps(4)+
+  '<div class="card scroll"><table class="tbl" style="min-width:820px"><thead><tr><th style="width:40px"></th><th>Report</th><th>UAT version</th><th>Production version</th><th>Change</th><th>Approved</th></tr></thead><tbody>'+(rows||'<tr><td colspan="6" class="muted" style="padding:24px;text-align:center">Nothing waiting. Mark published reports “ready for Production” from their detail page.</td></tr>')+'</tbody></table></div>'+
+  '<div class="card scroll"><div class="pad" style="border-bottom:1px solid #EDF0F2"><strong>Promotion log</strong></div><table class="tbl" style="min-width:700px"><thead><tr><th>Date</th><th>Report</th><th>Version</th><th>Change</th><th>By</th></tr></thead><tbody>'+S.plog.map(function(l){return '<tr><td class="mono" style="font-size:12px">'+l[0]+'</td><td>'+e(l[1])+'</td><td>'+l[2]+'</td><td>'+l[3]+'</td><td>'+l[4]+'</td></tr>';}).join('')+'</tbody></table></div></div>';
+}
+
+/* ---------- library ---------- */
+function vLibrary(){
+  var k=S.lib.find(function(x){return x.id===S.kid;})||S.lib[0];
+  var side=S.lib.map(function(x){return '<button class="jobcard'+(x.id===k.id?' on':'')+'" data-act="lib" data-arg="'+x.id+'"><div class="row" style="justify-content:space-between;gap:6px"><strong style="flex:1">'+e(x.title)+'</strong>'+stChip(x.status)+'</div><div class="muted" style="font-size:12px;margin-top:4px">'+x.type+' · '+e(x.reports)+'</div></button>';}).join('');
+  var acts=k.status==='Published'?B('Unpublish','','libSt','Draft')+B('Archive','','libSt','Archived'):(k.status==='Draft'?B('Publish','btn-p','libSt','Published'):B('Restore as draft','btn-p','libSt','Draft'));
+  return '<div class="stack"><div class="row" style="align-items:flex-end"><div style="flex:1 1 360px"><h1>Resource Library</h1><p class="muted" style="margin:4px 0 0">FAQs, how-to documents and links that Report Concierge can use alongside report metadata. Renamed from “Knowledge Base” (name to confirm). Lower priority than Reports for MVP.</p></div>'+B('+ Add resource','','toast','Add an FAQ, upload a PDF/Word document, or link a Confluence page')+'</div>'+
+  '<div class="split"><div class="side">'+side+'</div><div class="main card pad stack"><div class="row" style="gap:10px"><h2 style="flex:1">'+e(k.title)+'</h2>'+stChip(k.status)+'</div>'+
+  '<div class="row" style="gap:8px"><span class="lbl">Source:</span><span>'+e(k.src)+'</span>'+B(k.type==='Confluence page'?'Open Confluence page ↗':'Open original document ↗','btn-sm','toast','Opens '+k.link+' so a person can read the original')+'</div>'+
+  '<div><div class="lbl">Content used by Report Concierge</div><div style="margin-top:6px;white-space:pre-line">'+e(k.body)+'</div></div>'+
+  '<div><div class="lbl">Applies to</div><div style="margin-top:4px">'+e(k.reports)+'</div></div><div class="row" style="gap:8px">'+B('Edit','','toast','Edit form (existing Edit FAQ)')+acts+'</div></div></div></div>';
+}
+
+/* ---------- other top views ---------- */
+function vConcierge(){return '<div class="card pad" style="max-width:640px"><div class="lbl" style="letter-spacing:.08em">REPORT CONCIERGE</div><h1 style="margin:8px 0">Ask the concierge from the launcher.</h1><p class="muted">Existing page. Admins open <strong>Human Review</strong> from the top bar to manage report content.</p>'+B('Go to Human Review','btn-p','top','review')+'</div>';}
+function vFeedback(){
+  return '<div class="stack"><div><h1>Feedback Inbox</h1><p class="muted" style="margin:4px 0 0">Existing page. New: thumbs-down items link straight to the report record to fix.</p></div>'+S.feedback.map(function(f){
+    return '<div class="card pad stack" style="gap:8px"><div class="row"><div style="flex:1"><div class="lbl">USER QUERY</div><strong>'+e(f.q)+'</strong></div><span class="chip '+(f.up?'c-pub':'c-err')+'">'+(f.up?'Thumbs up':'Thumbs down')+'</span></div><div class="muted">'+e(f.a)+'</div>'+
+    (f.up?'':'<div class="banner b-err"><strong>'+e(f.reason)+'.</strong> '+e(f.comment)+'</div>')+(f.rid&&!f.up?'<div>'+B('Open report record to fix','btn-sm','fbOpen',f.rid)+'</div>':(!f.up?'<div class="muted" style="font-size:12px">Suggested report is not in the dictionary yet → '+B('Load it from source','btn-sm','tab','load')+'</div>':''))+'</div>';
+  }).join('')+'</div>';
+}
+
+/* ---------- modal ---------- */
+function vModal(){
+  var m=S.modal;if(!m)return '';var r=rep(S.rid),t,intro,steps,lbl,warn='',block='';
+  if(m==='publish'){
+    var miss=[['name','Report name'],['biz','Business description']].filter(function(x){return !r[x[0]];}).map(function(x){return x[1];});
+    if(miss.length)block='Missing required: '+miss.join(', ')+'.';
+    if(aiDone(r)<AIK.length)warn=(AIK.length-aiDone(r))+' AI-suggested field(s) not marked reviewed.';
+    t='Publish “'+r.name+'” in UAT'+(r.wd?' as v'+(r.ver+1):'');intro='Publishing makes this version the one Report Concierge suggests in UAT.';
+    steps=['Validate required fields',r.wd?'Replace v'+r.ver+' with v'+(r.ver+1)+' in one step (no gap, no delete)':'Create v1 as the published version','Refresh embeddings and search index','Record in history','Production is unchanged until you promote'];lbl='Publish';
+  }
+  if(m==='unpublish'){t='Unpublish “'+r.name+'”';intro='Stops Report Concierge suggesting it in UAT. Metadata and history are kept.';steps=['Remove from search index','Keep record and versions','Record in history'];lbl='Unpublish';}
+  if(m==='archive'){t='Archive “'+r.name+'”';intro='Retire the report without losing history. Use this instead of delete.';steps=['Remove from Report Concierge','Keep all versions and history','Record who archived it and when'];lbl='Archive';}
+  if(m==='regen'){t='Regenerate “'+r.name+'” from source';intro='Runs the current program file through the AI and creates a working draft with new suggestions.';steps=['Read '+r.path+' (dated '+r.srcDate+')','Generate new AI suggestions into a working draft','Keep published v'+r.ver+' live until the draft is published','You review the differences before publishing'];lbl='Regenerate';}
+  if(m==='promote'){var n=readyList().filter(function(x){return S.promSel[x.id];});t='Promote '+n.length+' report'+(n.length>1?'s':'')+' to Production';intro=n.map(function(x){return x.name+' v'+x.ver;}).join(', ');steps=['Copy approved metadata to the Production data dictionary','Build Production embeddings and index','Replace the previous Production version where one exists','Record in the promotion log'];lbl='Promote';}
+  return '<div class="overlay"><div role="dialog" aria-modal="true" class="card pad" style="width:100%;max-width:560px;padding:24px"><h2 style="margin-bottom:6px">'+e(t)+'</h2><p class="muted" style="margin:0 0 14px">'+e(intro)+'</p>'+
+  (block?'<div class="banner b-err" style="margin-bottom:12px"><strong>Can\'t publish yet.</strong> '+block+'</div>':'')+(warn?'<div class="banner b-warn" style="margin-bottom:12px">'+warn+'</div>':'')+
+  '<ol style="margin:0 0 18px;padding-left:20px">'+steps.map(function(s){return '<li style="margin-bottom:4px">'+e(s)+'</li>';}).join('')+'</ol><div class="row" style="justify-content:flex-end;gap:8px">'+B('Cancel','','close')+'<button class="btn btn-p" data-act="confirm"'+(block?' disabled':'')+'>'+lbl+'</button></div></div></div>';
+}
+
+function render(){
+  var a=document.activeElement,fid=a&&a.getAttribute&&a.getAttribute('data-field'),ss=a&&a.selectionStart,se=a&&a.selectionEnd;
+  var body;
+  if(S.top==='concierge')body=vConcierge();else if(S.top==='feedback')body=vFeedback();
+  else{body='<div><h1 style="font-size:28px">Human review</h1><p class="muted" style="margin:4px 0 0">Load report program files, review AI drafts, publish in UAT and promote approved reports to Production.</p></div>'+vTabs()+
+    (S.tab==='reports'?(S.screen==='detail'?vDetail():vReports()):S.tab==='load'?vLoad():S.tab==='jobs'?vJobs():S.tab==='promote'?vPromote():vLibrary());}
+  document.getElementById('app').innerHTML=vHeader()+'<main>'+body+'</main>'+vModal()+(S.toast?'<div class="toast" role="status">'+e(S.toast)+'</div>':'');
+  if(fid){var el=document.querySelector('[data-field="'+fid+'"]');if(el){el.focus();try{el.setSelectionRange(ss,se);}catch(x){}}}
+}
+
+/* ---------- actions ---------- */
+function runJob(names){
+  var id='B'+(17+S.jobs.length-2),job={id:id,name:'Batch '+(17+S.jobs.length-2)+' · '+S.platform,started:TODAY+' '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),items:names.map(function(n){return {f:n,st:'Queued',msg:'Waiting…'};})};
+  S.jobs.unshift(job);S.jid=id;S.tab='jobs';S.srcSel={};
+  job.items.forEach(function(it,i){
+    setTimeout(function(){it.st='Running';it.msg='Extracting metadata from SAS…';render();},700+i*500);
+    setTimeout(function(){
+      var ex=S.reports.find(function(r){return r.folder===it.f&&r.status!=='Archived';});
+      if(ex&&ex.status==='Published'){ex.snap={biz:ex.biz,internal:ex.internal};ex.wd={type:'Regenerated from source',started:TODAY};ex.srcChanged=false;
+        ex.biz=ex.biz+(it.f==='Participation'?' Now includes a monthly participation trend.':'');ex.acc={internal:1,purpose:1,users:1,outputs:1};hist(ex,'Regenerated from source (batch) · working draft created, v'+ex.ver+' stays live');it.rid=ex.id;it.msg='Working draft created · published v'+ex.ver+' stays live';}
+      else if(ex){ex.acc={};hist(ex,'Regenerated from source (batch)');it.rid=ex.id;it.msg='Existing draft refreshed';}
+      else{var src=S.sources.find(function(s){return s.name===it.f;})||{files:1};var nr=mk({id:nid(),name:it.f,folder:it.f,files:src.files,platform:S.platform,modified:TODAY,by:'batch',srcDate:'10/20/2026',
+        biz:'AI-suggested: '+it.f+' report for the Insider Knowledge platform. Review and adjust before publishing.',internal:'AI-suggested technical description generated from '+src.files+' SAS program file(s).',purpose:'',keywords:it.f.replace(/([a-z])([A-Z])/g,'$1 $2').toLowerCase(),users:'',hist:[]});
+        hist(nr,'Draft generated from source ('+job.name+')');S.reports.unshift(nr);it.rid=nr.id;it.msg='Draft created';}
+      it.st='Completed';render();
+    },1800+i*900);
+  });
+  toast(names.length+' report'+(names.length>1?'s':'')+' queued for AI extraction');
+}
+var ACT={
+  top:function(a){S.top=a;S.modal=null;render();},
+  tab:function(a){S.top='review';S.tab=a;S.screen='list';S.modal=null;render();},
+  tile:function(a){S.fS=S.fS===a?'All':a;S.fFlag='All';S.q='';render();},
+  fS:function(a){S.fS=a;render();},fFlag:function(a){S.fFlag=a;render();},
+  clear:function(){S.fS='All';S.fFlag='All';S.q='';render();},
+  open:function(id){S.top='review';S.tab='reports';S.screen='detail';S.rid=id;S.dtab='overview';render();},
+  fbOpen:function(id){ACT.open(id);toast('Opened from feedback · edit as a working draft to fix the description');},
+  dtab:function(a){S.dtab=a;render();},
+  acc:function(k){var r=rep(S.rid);r.acc[k]=!r.acc[k];render();},
+  status:function(s){var r=rep(S.rid);r.status=s;hist(r,s==='In review'?'Submitted for review':'Returned to draft');toast(s==='In review'?'Submitted for review':'Returned to draft');},
+  delDraft:function(){var r=rep(S.rid);S.reports=S.reports.filter(function(x){return x!==r;});S.screen='list';toast('Draft deleted (drafts only; published reports are archived instead)');},
+  editWd:function(){var r=rep(S.rid);r.snap={biz:r.biz,internal:r.internal,purpose:r.purpose,keywords:r.keywords,users:r.users,outputs:r.outputs};r.wd={type:'Manual edit',started:TODAY};hist(r,'Working draft started (manual edit) · v'+r.ver+' stays live');toast('Working draft created · v'+r.ver+' stays live in Report Concierge');},
+  discard:function(){var r=rep(S.rid);if(r.snap)Object.assign(r,r.snap);r.wd=null;r.snap=null;hist(r,'Working draft discarded');toast('Working draft discarded · v'+r.ver+' unchanged');},
+  ready:function(){var r=rep(S.rid);r.ready=true;hist(r,'Marked ready for Production');toast('Marked ready for Production');},
+  unready:function(){var r=rep(S.rid);r.ready=false;hist(r,'Removed from ready for Production');render();},
+  restore:function(){var r=rep(S.rid);r.status='Draft';hist(r,'Restored as draft');toast('Restored as draft');},
+  modal:function(a){S.modal=a;render();},close:function(){S.modal=null;render();},
+  confirm:function(){
+    var m=S.modal,r=rep(S.rid);S.modal=null;
+    if(m==='publish'){if(r.wd){r.ver++;r.wd=null;r.snap=null;r.ready=false;}else{r.ver=Math.max(1,r.ver+(r.status==='Published'?1:(r.ver?0:1)));}r.status='Published';r.published=TODAY;r.srcChanged=false;hist(r,'Published v'+r.ver+' in UAT · embeddings refreshed');toast('Published v'+r.ver+' in UAT · Report Concierge now uses it');}
+    if(m==='unpublish'){r.status='Draft';r.ready=false;hist(r,'Unpublished in UAT');toast('Unpublished · record and history kept');}
+    if(m==='archive'){r.status='Archived';r.ready=false;r.wd=null;hist(r,'Archived · removed from Report Concierge, history kept');toast('Archived · history kept');}
+    if(m==='regen'){r.snap={biz:r.biz,internal:r.internal};r.wd={type:'Regenerated from source',started:TODAY};r.srcChanged=false;r.acc={purpose:1,users:1,outputs:1};r.biz=r.biz+(r.name==='Participation'?' Now includes a monthly participation trend.':'');hist(r,'Regenerated from source · working draft created, v'+r.ver+' stays live');toast('Working draft created from the current program file · review and publish when ready');}
+    if(m==='promote'){var n=readyList().filter(function(x){return S.promSel[x.id];});n.forEach(function(x){S.plog.unshift([TODAY+' '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}),x.name,'v'+x.ver,x.prodVer?'Update v'+x.prodVer+' → v'+x.ver:'New in Production','you']);x.prodVer=x.ver;x.ready=false;hist(x,'Promoted v'+x.ver+' to Production');});S.promSel={};toast(n.length+' report'+(n.length>1?'s':'')+' promoted to Production');return;}
+    render();
+  },
+  refresh:function(){S.lastIndexed=TODAY+' '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});var p=S.reports.find(function(r){return r.name==='PremiumByState';});toast('Source list refreshed · 1 program file changed since publish (Participation)');},
+  selAll:function(){document.querySelectorAll('[data-chk="src"]').forEach(function(c){S.srcSel[c.getAttribute('data-arg')]=true;});render();},
+  selNone:function(){S.srcSel={};render();},
+  generate:function(){var n=Object.keys(S.srcSel).filter(function(k){return S.srcSel[k];});if(n.length)runJob(n);},
+  job:function(id){S.jid=id;render();},
+  retry:function(f){var j=S.jobs.find(function(x){return x.id===S.jid;});var it=j.items.find(function(i){return i.f===f;});it.st='Running';it.msg='Retrying…';render();setTimeout(function(){it.st='Failed';it.msg='Still failing: macro library with no report output. Mark as not a report, or load manually.';render();},1500);},
+  reviewDrafts:function(){S.tab='reports';S.screen='list';S.fS='Draft';S.fFlag='All';render();},
+  promote:function(){S.modal='promote';render();},
+  lib:function(id){S.kid=id;render();},
+  libSt:function(s){var k=S.lib.find(function(x){return x.id===S.kid;});k.status=s;toast('Resource '+s.toLowerCase());},
+  toast:function(m){toast(m);}
+};
+document.addEventListener('click',function(ev){var t=ev.target.closest('[data-act]');if(!t||t.disabled)return;var a=t.getAttribute('data-act');if(ACT[a])ACT[a](t.getAttribute('data-arg'));});
+document.addEventListener('input',function(ev){
+  var f=ev.target.getAttribute('data-field');if(!f)return;var v=ev.target.value;
+  if(f==='q'||f==='srcQ'){S[f]=v;render();return;}
+  if(f==='sort'||f==='platform'){S[f]=v;render();return;}
+  var p=f.split(':'),r=rep(S.rid);
+  if(p[0]==='r')r[p[1]]=v;if(p[0]==='crit')r.crit[+p[1]][1]=v;if(p[0]==='out')r.outs[+p[1]][1]=v;
+});
+document.addEventListener('change',function(ev){
+  var c=ev.target.getAttribute('data-chk');
+  if(c==='src'){S.srcSel[ev.target.getAttribute('data-arg')]=ev.target.checked;render();}
+  if(c==='incl'){S.incl=ev.target.checked;render();}
+  if(c==='prom'){S.promSel[ev.target.getAttribute('data-arg')]=ev.target.checked;render();}
+  if(ev.target.getAttribute('data-file')){var fs=Array.prototype.slice.call(ev.target.files||[]);var ok=fs.filter(function(f){return /\.sas$/i.test(f.name);});
+    if(fs.length>ok.length)toast((fs.length-ok.length)+' file(s) skipped: only .sas is supported');
+    if(ok.length){ok.forEach(function(f){var n=f.name.replace(/\.sas$/i,'');if(!S.sources.find(function(s){return s.name===n;}))S.sources.push({name:n,files:1});});runJob(ok.map(function(f){return f.name.replace(/\.sas$/i,'');}));}}
+});
+document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&S.modal){S.modal=null;render();}});
+render();
+})();
+</script>
+</body>
+</html>
